@@ -19,7 +19,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@500;700;800&display=swap">
 <style>
-  /* Layout: tela cheia 3D da igreja; HUD no topo, cartões de fase ancorados embaixo para o Miguel aparecer em cima */
+  /* Layout: tela cheia 3D da igreja; HUD no topo, cartões ancorados embaixo para o personagem aparecer em cima */
   :root {
     --night: #1e1533;      /* nave da igreja à noite */
     --plum: #2e2150;       /* painéis */
@@ -63,9 +63,9 @@
     width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(242,193,78,.5);
     background: rgba(30,21,51,.7); color: var(--gold); display: grid; place-items: center; cursor: pointer;
   }
-  #mute:focus-visible, .btn:focus-visible { outline: 3px solid var(--linen); outline-offset: 3px; }
+  #mute:focus-visible, .btn:focus-visible, .btn2:focus-visible, .seg button:focus-visible, .pick button:focus-visible, #choices button:focus-visible { outline: 3px solid var(--linen); outline-offset: 3px; }
   #toast {
-    position: fixed; left: 50%; top: 30%; transform: translate(-50%, -50%);
+    position: fixed; left: 50%; top: 32%; transform: translate(-50%, -50%);
     font-family: var(--display); font-weight: 800; font-size: clamp(22px, 6vw, 34px); color: var(--linen);
     text-align: center; text-wrap: balance; width: min(90vw, 560px);
     text-shadow: 0 3px 0 rgba(0,0,0,.45), 0 0 18px rgba(0,0,0,.4); opacity: 0;
@@ -79,48 +79,108 @@
     70% { opacity: 1; transform: translate(-50%, -55%) scale(1); }
     100% { opacity: 0; transform: translate(-50%, -70%) scale(1); }
   }
-  #meter {
-    margin-top: auto; width: min(100%, 460px); display: flex; flex-direction: column; gap: 8px; align-items: center;
+  #bubble {
+    position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 74px); transform: translateX(-50%);
+    background: var(--linen); color: #2a1606; font-family: var(--display); font-weight: 800; font-size: 22px;
+    padding: 10px 18px; border-radius: 18px; box-shadow: 0 8px 24px rgba(0,0,0,.35); white-space: nowrap;
   }
+  #bubble::after { content: ""; position: absolute; left: 30%; bottom: -10px; border: 10px solid transparent; border-top-color: var(--linen); border-bottom: 0; }
+  #bubble.pop { animation: bub .25s cubic-bezier(.2,.9,.3,1.4); }
+  @keyframes bub { from { transform: translateX(-50%) scale(.6); } to { transform: translateX(-50%) scale(1); } }
+  #meter, #choices { margin-top: auto; width: min(100%, 460px); display: flex; flex-direction: column; gap: 8px; align-items: center; }
   .meter-track {
     position: relative; width: 100%; height: 34px; border-radius: 17px;
     background: rgba(30,21,51,.85); border: 2px solid rgba(255,246,232,.25); overflow: hidden;
   }
-  #zone { position: absolute; top: 0; bottom: 0; background: rgba(242,193,78,.45); border-left: 2px solid var(--gold); border-right: 2px solid var(--gold); }
+  #zone, #zone2 { position: absolute; top: 0; bottom: 0; background: rgba(242,193,78,.45); border-left: 2px solid var(--gold); border-right: 2px solid var(--gold); }
   #zone::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 22%; transform: translateX(-50%); background: rgba(242,193,78,.7); }
+  #meter.edges #zone::after { display: none; }
   #needle { position: absolute; top: -2px; bottom: -2px; width: 6px; margin-left: -3px; border-radius: 3px; background: var(--linen); box-shadow: 0 0 10px rgba(255,246,232,.8); }
   #meter-label { font-weight: 800; font-size: 14px; color: var(--mist); letter-spacing: .04em; }
+  .order-bar { width: 100%; height: 10px; border-radius: 5px; background: rgba(30,21,51,.85); overflow: hidden; border: 1px solid rgba(255,246,232,.2); }
+  #order-fill { height: 100%; width: 100%; background: var(--gold); border-radius: 5px; }
+  .choice-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; pointer-events: auto; }
+  #choices button {
+    appearance: none; border: 2px solid rgba(242,193,78,.6); border-radius: 18px; padding: 12px 6px 10px;
+    background: rgba(30,21,51,.92); color: var(--linen); font-family: var(--display); font-weight: 800; font-size: 18px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; min-width: 0;
+  }
+  #choices button:active { transform: scale(.96); background: var(--plum); }
+  .ic { display: block; width: 26px; height: 40px; position: relative; }
+  .ic.cruet::before { content: ""; position: absolute; left: 9px; top: 0; width: 8px; height: 10px; border-radius: 3px 3px 0 0; background: var(--gold); }
+  .ic.cruet::after { content: ""; position: absolute; left: 2px; top: 10px; width: 22px; height: 30px; border-radius: 9px 9px 7px 7px; border: 2px solid rgba(255,255,255,.75); background: var(--fill); }
+  .ic.agua { --fill: #8fd3ff; }
+  .ic.vinho { --fill: #8e1b3a; }
+  .ic.toalha { width: 36px; height: 40px; }
+  .ic.toalha::before { content: ""; position: absolute; left: 0; top: 8px; width: 36px; height: 26px; border-radius: 4px; background: #fbf7ef; box-shadow: inset 0 -6px 0 #e7dfcf; }
+  .ic.toalha::after { content: ""; position: absolute; left: 15px; top: 12px; width: 6px; height: 16px; background: var(--cassock); box-shadow: -5px 5px 0 -1px transparent; }
   .screen {
-    pointer-events: auto; margin-top: auto; width: min(100%, 460px);
+    pointer-events: auto; margin-top: auto; width: min(100%, 460px); max-height: 100%; overflow-y: auto;
     background: rgba(30,21,51,.9); border: 2px solid rgba(242,193,78,.55); border-radius: 22px;
-    padding: 20px 20px 18px; display: flex; flex-direction: column; gap: 10px;
+    padding: 18px 18px 16px; display: flex; flex-direction: column; gap: 10px;
     box-shadow: 0 18px 50px rgba(0,0,0,.45);
     animation: rise .45s cubic-bezier(.2,.9,.3,1.2);
   }
   @keyframes rise { from { transform: translateY(24px); opacity: .4; } to { transform: none; opacity: 1; } }
   .eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
   .screen h1, .screen h2 { margin: 0; font-family: var(--display); font-weight: 800; line-height: 1; text-wrap: balance; }
-  .screen h1 { font-size: clamp(38px, 11vw, 52px); color: var(--linen); }
-  .screen h1 span { color: var(--cassock); text-shadow: 0 2px 0 rgba(0,0,0,.3); }
-  .screen h2 { font-size: clamp(28px, 8vw, 36px); }
-  .screen p { margin: 0; font-size: 16px; line-height: 1.45; color: #e9dff5; }
+  .screen h1 { font-size: clamp(36px, 10.5vw, 50px); color: var(--linen); }
+  .screen h1 .red { color: var(--cassock); text-shadow: 0 2px 0 rgba(0,0,0,.3); }
+  .screen h2 { font-size: clamp(26px, 7.5vw, 34px); }
+  .screen p { margin: 0; font-size: 15px; line-height: 1.45; color: #e9dff5; }
   .how { font-size: 14px !important; color: var(--mist) !important; font-weight: 700; }
-  .steps { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0; padding: 0; list-style: none; }
-  .steps li { font-size: 13px; font-weight: 800; padding: 4px 10px; border-radius: 999px; background: var(--plum); color: var(--linen); }
-  .steps li b { color: var(--gold); margin-right: 4px; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .lbl { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mist); }
+  .seg { display: flex; background: var(--plum); border-radius: 999px; padding: 3px; gap: 2px; }
+  .seg button {
+    appearance: none; border: 0; background: transparent; color: var(--linen); cursor: pointer;
+    font-family: var(--body); font-weight: 800; font-size: 14px; padding: 7px 12px; border-radius: 999px;
+  }
+  .seg button[aria-pressed="true"] { background: var(--gold); color: #2a1606; }
   .result { font-family: var(--display); font-weight: 800; font-size: 22px; color: var(--gold); }
   .btn {
-    margin-top: 6px; appearance: none; border: 0; cursor: pointer; border-radius: 16px; padding: 14px 18px;
+    margin-top: 4px; appearance: none; border: 0; cursor: pointer; border-radius: 16px; padding: 13px 18px;
     font-family: var(--display); font-weight: 800; font-size: 22px; color: #2a1606;
     background: var(--gold); box-shadow: 0 5px 0 #b88a1f; transition: transform .08s;
   }
   .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #b88a1f; }
+  .btn2 {
+    appearance: none; cursor: pointer; border-radius: 14px; padding: 11px 14px; border: 2px solid rgba(242,193,78,.6);
+    background: transparent; color: var(--gold); font-family: var(--display); font-weight: 800; font-size: 18px;
+  }
+  .btn2:active { background: var(--plum); }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .pick { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pick button {
+    appearance: none; cursor: pointer; text-align: left; border: 0; border-radius: 14px; padding: 10px 12px;
+    background: var(--plum); color: var(--linen); font-family: var(--body); font-weight: 800; font-size: 14px; line-height: 1.25;
+  }
+  .pick button b { display: block; font-family: var(--display); color: var(--gold); font-size: 13px; }
   .best { font-size: 13px !important; color: var(--mist) !important; text-align: center; font-variant-numeric: tabular-nums; }
-  .score-big { font-family: var(--display); font-weight: 800; font-size: 64px; line-height: .9; color: var(--gold); font-variant-numeric: tabular-nums; }
-  @media (prefers-reduced-motion: reduce) { .screen, #toast.show { animation-duration: .01s; } }
+  .score-big { font-family: var(--display); font-weight: 800; font-size: 60px; line-height: .9; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .save { display: flex; flex-direction: column; gap: 6px; }
+  .save label { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mist); }
+  .save-row { display: flex; gap: 8px; }
+  .save input {
+    flex: 1; min-width: 0; font: 700 16px var(--body); color: var(--linen); background: var(--plum);
+    border: 2px solid rgba(255,246,232,.2); border-radius: 12px; padding: 10px 12px; user-select: text; -webkit-user-select: text;
+  }
+  .save input:focus { outline: none; border-color: var(--gold); }
+  .board { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+  .board li {
+    display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 8px;
+    background: var(--plum); border-radius: 12px; padding: 7px 10px; font-variant-numeric: tabular-nums;
+  }
+  .board li.me { outline: 2px solid var(--gold); }
+  .board .pos { font-family: var(--display); font-weight: 800; color: var(--gold); }
+  .board .who { min-width: 0; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .board .who small { display: block; font-weight: 700; font-size: 12px; color: var(--mist); }
+  .board .pts { font-family: var(--display); font-weight: 800; font-size: 20px; }
+  .empty { text-align: center; color: var(--mist); font-weight: 700; padding: 10px 0; }
+  @media (prefers-reduced-motion: reduce) { .screen, #toast.show, #bubble.pop { animation-duration: .01s; } }
 </style>
 
-<canvas id="c" aria-label="Igreja em 3D com o Miguel coroinha"></canvas>
+<canvas id="c" aria-label="Igreja em 3D com o coroinha"></canvas>
 <button id="mute" aria-label="Desligar som" title="Som">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path id="mute-waves" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/><path id="mute-x" d="M16 9l5 6M21 9l-5 6" style="display:none"/></svg>
 </button>
@@ -136,29 +196,55 @@
     </div>
   </div>
   <div id="toast"></div>
+  <div id="bubble" hidden></div>
   <div id="meter" hidden>
-    <div class="meter-track"><div id="zone"></div><div id="needle"></div></div>
+    <div class="meter-track"><div id="zone"></div><div id="zone2" hidden></div><div id="needle"></div></div>
     <div id="meter-label">Toque 1 de 8</div>
+  </div>
+  <div id="choices" hidden>
+    <div class="order-bar"><div id="order-fill"></div></div>
+    <div class="choice-row">
+      <button data-c="agua"><i class="ic cruet agua"></i>Água</button>
+      <button data-c="vinho"><i class="ic cruet vinho"></i>Vinho</button>
+      <button data-c="toalha"><i class="ic toalha"></i>Toalha</button>
+    </div>
   </div>
 
   <section id="menu" class="screen">
     <span class="eyebrow">Missa de domingo</span>
-    <h1>Miguel <span>Coroinha</span></h1>
-    <p>O Miguel é o coroinha mais animado da paróquia. Ajude ele a vencer os desafios da missa sem passar vergonha na frente do padre.</p>
-    <ul class="steps">
-      <li><b>1</b>Procissão</li>
-      <li><b>2</b>Velas do altar</li>
-      <li><b>3</b>Sino da consagração</li>
-      <li><b>4</b>Vimpa do bispo</li>
-    </ul>
-    <button class="btn" id="btn-start">Começar a missa</button>
-    <p class="best" id="best-menu"></p>
+    <h1><span id="menu-name">Miguel</span> <span class="red">Coroinha</span></h1>
+    <p id="menu-text"></p>
+    <div class="row">
+      <span class="lbl">Personagem</span>
+      <div class="seg" id="seg-hero"><button data-v="miguel" aria-pressed="true">Miguel</button><button data-v="clarinha" aria-pressed="false">Clarinha</button></div>
+    </div>
+    <div class="row">
+      <span class="lbl">Dificuldade</span>
+      <div class="seg" id="seg-dif"><button data-v="facil" aria-pressed="false">Fácil</button><button data-v="normal" aria-pressed="true">Normal</button><button data-v="dificil" aria-pressed="false">Difícil</button></div>
+    </div>
+    <button class="btn" id="btn-start">Missa completa</button>
+    <div class="btn-row"><button class="btn2" id="btn-practice">Treinar desafio</button><button class="btn2" id="btn-board">Placar</button></div>
+  </section>
+
+  <section id="practice" class="screen" hidden>
+    <span class="eyebrow">Treino</span>
+    <h2>Escolha um desafio</h2>
+    <div class="pick" id="pick-list"></div>
+    <button class="btn2" id="btn-back1">Voltar</button>
+  </section>
+
+  <section id="board" class="screen" hidden>
+    <span class="eyebrow">Placar da família</span>
+    <h2>Melhores missas</h2>
+    <ol class="board" id="board-list"></ol>
+    <p class="best">O placar fica guardado neste aparelho.</p>
+    <button class="btn2" id="btn-back2">Voltar</button>
   </section>
 
   <section id="intro" class="screen" hidden>
     <span class="result" id="intro-result" hidden></span>
     <p id="intro-joke" hidden></p>
-    <span class="eyebrow" id="intro-eyebrow">Desafio 1 de 4</span>
+    <span class="eyebrow" id="intro-eyebrow">Desafio 1 de 6</span>
     <h2 id="intro-title"></h2>
     <p id="intro-text"></p>
     <p class="how" id="intro-how"></p>
@@ -166,12 +252,16 @@
   </section>
 
   <section id="end" class="screen" hidden>
-    <span class="eyebrow">Fim da missa</span>
+    <span class="eyebrow" id="end-eyebrow">Fim da missa</span>
     <div class="score-big" id="end-score">0</div>
     <h2 id="end-rank"></h2>
     <p id="end-line"></p>
-    <button class="btn" id="btn-again">Jogar de novo</button>
-    <p class="best" id="best-end"></p>
+    <form id="save-form" class="save">
+      <label for="player-name">Seu nome no placar</label>
+      <div class="save-row"><input id="player-name" maxlength="16" autocomplete="off" enterkeyhint="done" placeholder="Ex.: Miguel"><button class="btn2" type="submit">Salvar</button></div>
+    </form>
+    <ol class="board" id="end-board" hidden></ol>
+    <div class="btn-row"><button class="btn" id="btn-again">De novo</button><button class="btn2" id="btn-menu">Menu</button></div>
   </section>
 </div>
 
@@ -196,6 +286,10 @@ catch (e) { miguelErro('Este navegador não liberou o 3D (WebGL). Tente abrir no
 const $ = s => document.querySelector(s);
 const rand = (a, b) => a + Math.random() * (b - a);
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('miguel-coroinha-' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('miguel-coroinha-' + k, JSON.stringify(v)); } catch (e) {} },
+};
 
 /* ---------- Som ---------- */
 let AC = null, muted = false;
@@ -222,6 +316,7 @@ function tone(f, dur, o = {}) {
 }
 const sfx = {
   bell() { [1, 2, 2.76, 4.1].forEach((m, i) => tone(740 * m, 1.6 / (i * 0.6 + 1), { vol: 0.13 / (i + 1) })); },
+  chime() { tone(1180, 0.35, { vol: 0.08 }); tone(1770, 0.3, { vol: 0.04, delay: 0.03 }); },
   coin() { tone(1320, 0.12, { type: 'triangle', vol: 0.12 }); tone(1760, 0.16, { type: 'triangle', vol: 0.1, delay: 0.06 }); },
   bump() { tone(180, 0.25, { type: 'square', vol: 0.07, slide: 0.4 }); },
   light() { tone(420, 0.2, { type: 'sawtooth', vol: 0.035, slide: 2.4 }); tone(900, 0.15, { type: 'triangle', vol: 0.06, delay: 0.05 }); },
@@ -236,15 +331,16 @@ $('#mute').addEventListener('click', () => {
   $('#mute').setAttribute('aria-label', muted ? 'Ligar som' : 'Desligar som');
 });
 
-/* ---------- Recorde ---------- */
-let best = 0;
-try { best = parseInt(localStorage.getItem('miguel-coroinha-best') || '0', 10) || 0; } catch (e) {}
-function saveBest(v) { best = Math.max(best, v); try { localStorage.setItem('miguel-coroinha-best', String(best)); } catch (e) {} }
-function showBest() {
-  const t = best > 0 ? `Seu recorde: ${best} pontos` : '';
-  $('#best-menu').textContent = t; $('#best-end').textContent = t;
-}
-showBest();
+/* ---------- Personagens e dificuldade ---------- */
+const HEROES = {
+  miguel: { nome: 'Miguel', o: 'o', O: 'O', ele: 'ele', x: 'o' },
+  clarinha: { nome: 'Clarinha', o: 'a', O: 'A', ele: 'ela', x: 'a' },
+};
+const DIFS = { facil: { m: 0.75, label: 'Fácil' }, normal: { m: 1, label: 'Normal' }, dificil: { m: 1.3, label: 'Difícil' } };
+let heroKey = HEROES[store.get('hero', 'miguel')] ? store.get('hero', 'miguel') : 'miguel';
+let difKey = DIFS[store.get('dif', 'normal')] ? store.get('dif', 'normal') : 'normal';
+let N = HEROES[heroKey];
+const DM = () => DIFS[difKey].m;
 
 /* ---------- Cena ---------- */
 const canvas = $('#c');
@@ -278,6 +374,7 @@ const M = {
   skin: mat(0xf1c6a0), red: mat(0xc62834, { roughness: 0.6 }), white: mat(0xfbf7ef, { roughness: 0.9 }),
   hair: mat(0x2e1d14, { side: THREE.DoubleSide }), black: mat(0x161616), cheek: mat(0xf28b8b),
   wall: mat(0x3a2a55), stone: mat(0xcbb89a), cloth: mat(0xf5efe3), wax: mat(0xfff3d6, { roughness: 0.5 }),
+  glassW: mat(0xbfe6ff, { transparent: true, opacity: 0.55, roughness: 0.05 }), water: mat(0x8fd3ff, { roughness: 0.1 }), wine: mat(0x7a1530, { roughness: 0.2 }),
 };
 const add = (geo, m, x, y, z, parent) => {
   const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; parent.add(o); return o;
@@ -367,13 +464,36 @@ add(new THREE.BoxGeometry(3.4, 1.1, 1.2), M.cloth, 0, 0.85, -8.8, altar);
 add(new THREE.BoxGeometry(2.8, 0.75, 0.04), M.red, 0, 0.8, -8.18, altar);
 add(new THREE.BoxGeometry(0.1, 0.45, 0.02), M.gold, 0, 0.8, -8.15, altar);
 add(new THREE.BoxGeometry(0.32, 0.1, 0.02), M.gold, 0, 0.9, -8.15, altar);
-add(new THREE.BoxGeometry(0.6, 0.6, 0.5), M.gold, 0, 1.7, -9.1, altar);
 add(new THREE.BoxGeometry(0.25, 3.4, 0.15), M.gold, 0, 4.6, -10.5, altar);
 add(new THREE.BoxGeometry(1.7, 0.25, 0.15), M.gold, 0, 5.4, -10.5, altar);
 const crossGlow = sprite(GLOW, 4); crossGlow.position.set(0, 5, -10.3); crossGlow.material.opacity = 0.35; altar.add(crossGlow);
 
-/* ---------- Miguel ---------- */
-function makeMiguel() {
+/* ---------- Padre ---------- */
+function makePriest() {
+  const g = new THREE.Group();
+  const alb = mat(0xf7f3ea, { roughness: 0.9 }), green = mat(0x2f7a4f, { roughness: 0.7 }), grey = mat(0xb9b4ad);
+  add(new THREE.CylinderGeometry(0.42, 0.62, 1.75, 24), alb, 0, 0.88, 0, g);
+  add(new THREE.CylinderGeometry(0.5, 0.78, 1.15, 24), green, 0, 1.25, 0, g).scale.z = 0.62;
+  add(new THREE.BoxGeometry(0.1, 0.95, 0.02), M.gold, 0, 1.25, 0.43, g).rotation.x = -0.1;
+  add(new THREE.BoxGeometry(0.46, 0.08, 0.02), M.gold, 0, 1.55, 0.4, g).rotation.x = -0.1;
+  add(new THREE.SphereGeometry(0.5, 20, 12), green, 0, 1.82, 0, g).scale.set(1, 0.4, 0.62);
+  add(new THREE.CylinderGeometry(0.14, 0.16, 0.12, 16), alb, 0, 1.98, 0, g);
+  const head = new THREE.Group(); head.position.set(0, 2.32, 0); g.add(head);
+  add(new THREE.SphereGeometry(0.34, 24, 18), M.skin, 0, 0, 0, head);
+  add(new THREE.TorusGeometry(0.3, 0.08, 10, 24), grey, 0, -0.02, -0.04, head).rotation.x = Math.PI / 2 + 0.25;
+  add(new THREE.SphereGeometry(0.05, 10, 8), mat(0xe8b08a), 0, -0.04, 0.33, head);
+  for (const s of [-1, 1]) {
+    add(new THREE.TorusGeometry(0.075, 0.014, 6, 18), M.black, s * 0.12, 0.05, 0.3, head);
+    add(new THREE.SphereGeometry(0.032, 8, 6), M.black, s * 0.12, 0.05, 0.29, head);
+  }
+  add(new THREE.BoxGeometry(0.1, 0.014, 0.014), M.black, 0, 0.06, 0.32, head);
+  add(new THREE.TorusGeometry(0.07, 0.015, 6, 14, Math.PI), M.black, 0, -0.14, 0.31, head).rotation.z = Math.PI;
+  return { g, head };
+}
+const priest = makePriest(); scene.add(priest.g);
+
+/* ---------- Coroinhas (Miguel e Clarinha) ---------- */
+function makeKid(kind) {
   const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
   const shoeG = new THREE.BoxGeometry(0.18, 0.12, 0.3);
   const shoeL = add(shoeG, M.black, -0.14, 0.06, 0.04, body), shoeR = add(shoeG, M.black, 0.14, 0.06, 0.04, body);
@@ -387,14 +507,26 @@ function makeMiguel() {
   add(new THREE.SphereGeometry(0.42, 32, 24), M.skin, 0, 0, 0, head);
   const hr = add(new THREE.SphereGeometry(0.455, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.55), M.hair, 0, 0.03, -0.03, head); hr.rotation.x = -0.4;
   const fringeG = new THREE.SphereGeometry(0.14, 16, 12);
-  // franja penteada de lado, como na foto
-  [[-0.2, 0.25, 0.3, 1.2], [-0.04, 0.3, 0.32, 1.1], [0.14, 0.31, 0.29, 0.9], [0.28, 0.24, 0.24, 0.7]].forEach(([x, y, z, s]) => {
-    const f = add(fringeG, M.hair, x, y, z, head); f.scale.set(1.1 * s, 0.6, 0.8); f.rotation.z = -0.35;
-  });
+  if (kind === 'miguel') {
+    // franja penteada de lado, como na foto
+    [[-0.2, 0.25, 0.3, 1.2], [-0.04, 0.3, 0.32, 1.1], [0.14, 0.31, 0.29, 0.9], [0.28, 0.24, 0.24, 0.7]].forEach(([x, y, z, s]) => {
+      const f = add(fringeG, M.hair, x, y, z, head); f.scale.set(1.1 * s, 0.6, 0.8); f.rotation.z = -0.35;
+    });
+  } else {
+    // franjinha reta, cabelo comprido nas costas e laço vermelho
+    [-0.24, -0.08, 0.08, 0.24].forEach(x => add(fringeG, M.hair, x, 0.27, 0.29, head).scale.set(0.85, 0.55, 0.8));
+    add(new THREE.CylinderGeometry(0.44, 0.4, 0.85, 24, 1, true, Math.PI / 2, Math.PI), M.hair, 0, -0.32, -0.02, head);
+    add(new THREE.SphereGeometry(0.4, 20, 10, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), M.hair, 0, -0.74, -0.02, head).scale.set(1, 0.25, 0.7);
+    for (const s of [-1, 1]) add(new THREE.BoxGeometry(0.12, 0.7, 0.12), M.hair, s * 0.4, -0.3, 0.05, head).rotation.z = s * 0.06;
+    const bow = new THREE.Group(); bow.position.set(0.22, 0.38, 0.12); bow.rotation.z = -0.4; head.add(bow);
+    for (const s of [-1, 1]) add(new THREE.ConeGeometry(0.1, 0.18, 12), M.red, s * 0.1, 0, 0, bow).rotation.z = s * Math.PI / 2;
+    add(new THREE.SphereGeometry(0.05, 10, 8), M.red, 0, 0, 0, bow);
+  }
   const eyeG = new THREE.SphereGeometry(0.06, 16, 12), hiG = new THREE.SphereGeometry(0.022, 8, 6);
   for (const s of [-1, 1]) {
     add(eyeG, M.black, s * 0.14, 0.02, 0.37, head);
     add(hiG, M.white, s * 0.14 + 0.02, 0.05, 0.42, head);
+    if (kind === 'clarinha') add(new THREE.BoxGeometry(0.05, 0.015, 0.015), M.black, s * 0.2, 0.07, 0.36, head).rotation.z = s * 0.5;
     add(new THREE.SphereGeometry(0.075, 12, 8), M.cheek, s * 0.25, -0.1, 0.32, head).scale.set(1, 0.6, 0.4);
     add(new THREE.SphereGeometry(0.09, 12, 8), M.skin, s * 0.41, 0, 0, head);
   }
@@ -429,6 +561,31 @@ function makeMiguel() {
   add(new THREE.CylinderGeometry(0.07, 0.2, 0.26, 20, 1, true), new THREE.MeshStandardMaterial({ color: 0xf2c14e, metalness: 0.55, roughness: 0.3, side: THREE.DoubleSide }), 0, -0.05, 0, bell);
   add(new THREE.SphereGeometry(0.045, 10, 8), M.gold, 0, -0.2, 0, bell);
 
+  // Bandeja com as galhetas (água e vinho) e a toalha do lavabo
+  const tray = new THREE.Group(); tray.position.set(0, 0.9, 0.5); body.add(tray);
+  add(new THREE.BoxGeometry(0.6, 0.03, 0.32), M.gold, 0, 0, 0, tray);
+  function cruet(x, liquid) {
+    const c = new THREE.Group(); c.position.set(x, 0.015, 0); tray.add(c);
+    add(new THREE.CylinderGeometry(0.06, 0.07, 0.2, 14), M.glassW, 0, 0.1, 0, c);
+    add(new THREE.CylinderGeometry(0.052, 0.062, 0.12, 14), liquid, 0, 0.07, 0, c);
+    add(new THREE.CylinderGeometry(0.025, 0.04, 0.08, 10), M.glassW, 0, 0.24, 0, c);
+    add(new THREE.SphereGeometry(0.03, 10, 8), M.gold, 0, 0.3, 0, c);
+    return c;
+  }
+  const agua = cruet(-0.18, M.water), vinho = cruet(0.18, M.wine);
+  const toalha = add(new THREE.BoxGeometry(0.16, 0.05, 0.24), M.white, 0, 0.04, 0, tray);
+  tray.userData = { agua, vinho, toalha };
+
+  // Turíbulo: corrente presa na mão, balança em volta de um pivô
+  const thur = new THREE.Group(); thur.position.set(0.34, 1.0, 0.5); body.add(thur);
+  const swing = new THREE.Group(); thur.add(swing);
+  add(new THREE.CylinderGeometry(0.008, 0.008, 0.62, 6), M.gold, 0, -0.31, 0, swing);
+  add(new THREE.TorusGeometry(0.035, 0.01, 6, 14), M.gold, 0, 0.01, 0, swing);
+  add(new THREE.ConeGeometry(0.11, 0.18, 16), M.gold, 0, -0.65, 0, swing);
+  add(new THREE.SphereGeometry(0.11, 16, 10, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), M.gold, 0, -0.74, 0, swing);
+  const ember = sprite(GLOW, 0.28); ember.position.set(0, -0.72, 0); swing.add(ember);
+  thur.userData = { swing };
+
   // Vimpa: véu creme sobre os ombros, faixas vermelhas com cruzes douradas e franjas
   const cream = mat(0xf3ead2, { roughness: 0.85, side: THREE.DoubleSide });
   const bandTex = canvasTex(32, 128, g => {
@@ -457,12 +614,19 @@ function makeMiguel() {
   add(new THREE.SphereGeometry(0.035, 10, 8), M.gold, 0, 0.69, 0, mitre);
   for (const s of [-1, 1]) add(new THREE.BoxGeometry(0.06, 0.38, 0.01), M.red, s * 0.08, -0.1, -0.12, mitre);
 
-  return { root, body, head, armL, armR, shoeL, shoeR, mitre, props: { cross, lighter, bell, vimpa } };
+  return { root, body, head, armL, armR, shoeL, shoeR, mitre, props: { cross, lighter, bell, tray, thur, vimpa } };
 }
-const miguel = makeMiguel(); scene.add(miguel.root);
+const kids = { miguel: makeKid('miguel'), clarinha: makeKid('clarinha') };
+scene.add(kids.miguel.root, kids.clarinha.root);
+let hero = kids[heroKey];
+function setHero(k) {
+  heroKey = k; N = HEROES[k]; hero = kids[k]; store.set('hero', k);
+  for (const key in kids) kids[key].root.visible = key === k;
+}
+setHero(heroKey);
 function setProp(name) {
-  for (const k in miguel.props) miguel.props[k].visible = k === name;
-  miguel.armL.visible = miguel.armR.visible = name !== 'vimpa';
+  for (const k in hero.props) hero.props[k].visible = k === name;
+  hero.armL.visible = hero.armR.visible = name !== 'vimpa';
 }
 
 /* ---------- Obstáculos da procissão ---------- */
@@ -556,33 +720,54 @@ const CANDLE_Z = -5.2, FLAME_Y = 2.72;
 }
 function setLit(c, v) { c.lit = v; c.flame.visible = v; c.glow.visible = v; }
 const smokes = [];
-function puff(x, y, z) {
-  const s = sprite(SMOKE, 0.4, false); s.position.set(x, y, z); scene.add(s); smokes.push({ s, life: 1.1 });
+function puff(x, y, z, size = 0.4, life = 1.1) {
+  const s = sprite(SMOKE, size, false); s.position.set(x, y, z); scene.add(s); smokes.push({ s, life, max: life, size });
 }
 
-/* ---------- Estado ---------- */
+/* ---------- Desafios ---------- */
 const PHASES = [
-  { key: 'proc', title: 'A procissão de entrada', text: 'O Miguel leva a cruz pelo corredor da igreja. Desvie do que aparecer no caminho e pegue os sininhos dourados.', how: 'Toque no lado esquerdo ou direito da tela para mudar de faixa.' },
-  { key: 'velas', title: 'As velas do altar', text: 'Alguém deixou a porta aberta e o vento não para de apagar as velas. Mantenha o máximo delas acesas.', how: 'Toque numa vela apagada para acender.' },
-  { key: 'sino', title: 'O sino da consagração', text: 'É o momento mais importante da missa. Toque o sino bem na hora certa, oito vezes seguidas.', how: 'Toque na tela quando o marcador passar pela faixa dourada.' },
-  { key: 'vimpa', title: 'A vimpa do bispo', text: 'Hoje o bispo veio, e o Miguel foi escolhido para levar a mitra na vimpa durante a procissão de saída. Não deixe ela cair!', how: 'A mitra está caindo para a direita? Toque na esquerda. Caindo para a esquerda? Toque na direita.' },
+  { key: 'proc', title: 'A procissão de entrada',
+    text: () => `${N.O} ${N.nome} leva a cruz pelo corredor da igreja. Desvie do que aparecer no caminho e pegue os sininhos dourados.`,
+    how: 'Toque no lado esquerdo ou direito da tela para mudar de faixa.' },
+  { key: 'velas', title: 'As velas do altar',
+    text: () => 'Alguém deixou a porta aberta e o vento não para de apagar as velas. Mantenha o máximo delas acesas.',
+    how: 'Toque numa vela apagada para acender.' },
+  { key: 'incenso', title: 'O turíbulo do incenso',
+    text: () => 'Hora de incensar o altar. Mantenha o turíbulo balançando bem alto, de um lado para o outro, para a fumaça subir bonita.',
+    how: 'Toque quando o marcador chegar na faixa dourada de cada ponta. Tocar fora da hora tira a força do balanço.' },
+  { key: 'galhetas', title: 'As galhetas do ofertório',
+    text: () => 'O padre vai pedir água, vinho ou a toalha para lavar as mãos. Entregue a coisa certa, bem rápido.',
+    how: 'Toque no botão do que o padre pediu antes de a barrinha acabar.' },
+  { key: 'sino', title: 'O sino da consagração',
+    text: () => 'É o momento mais importante da missa. Toque o sino bem na hora certa, oito vezes seguidas.',
+    how: 'Toque na tela quando o marcador passar pela faixa dourada.' },
+  { key: 'vimpa', title: 'A vimpa do bispo',
+    text: () => `Hoje o bispo veio, e ${N.o} ${N.nome} foi escolhid${N.x} para levar a mitra na vimpa durante a procissão de saída. Não deixe ela cair!`,
+    how: 'A mitra está caindo para a direita? Toque na esquerda. Caindo para a esquerda? Toque na direita.' },
 ];
-const S = { mode: 'menu', phase: 0, score: 0, ps: 0, t: 0 };
+const S = { mode: 'menu', phase: 0, score: 0, ps: 0, t: 0, run: { full: true, list: [0], pos: 0 } };
 const P = {}; // estado da fase atual
 const obstacles = [];
 const LANES = [-1.25, 0, 1.25];
+let phaseStartScore = 0;
 
 function hud() {
   $('#hud-score').textContent = Math.floor(S.score + S.ps);
   const k = PHASES[S.phase].key;
   $('#hud-phase').textContent = PHASES[S.phase].title.replace(/^(A|As|O) /, '');
-  $('#hud-lives').textContent = (k === 'proc' || k === 'vimpa') ? '♥'.repeat(Math.max(0, P.lives)) + '♡'.repeat(3 - Math.max(0, P.lives)) : '';
-  $('#hud-time').textContent = k === 'sino' ? `Toque ${Math.min(P.round + 1, P.rounds)} de ${P.rounds}` : `${Math.max(0, Math.ceil(P.time))} s`;
+  $('#hud-lives').textContent = (k === 'proc' || k === 'vimpa') ? '♥'.repeat(Math.max(0, P.lives)) + '♡'.repeat(Math.max(0, 3 - P.lives)) : '';
+  $('#hud-time').textContent = k === 'sino' ? `Toque ${Math.min(P.round + 1, P.rounds)} de ${P.rounds}`
+    : k === 'galhetas' ? `Pedido ${Math.min(P.round + 1, P.rounds)} de ${P.rounds}`
+    : `${Math.max(0, Math.ceil(P.time))} s`;
 }
-let toastTimer = 0;
 function toast(text, kind = '') {
   const el = $('#toast'); el.textContent = text; el.className = '';
   void el.offsetWidth; el.className = 'show ' + kind;
+}
+function bubble(text) {
+  const b = $('#bubble');
+  if (!text) { b.hidden = true; return; }
+  b.textContent = text; b.hidden = false; b.className = ''; void b.offsetWidth; b.className = 'pop';
 }
 
 function resetWorld(kind) {
@@ -593,30 +778,57 @@ function resetWorld(kind) {
   }
   floorTex.offset.y = 0; carpetTex.offset.y = 0;
   altar.visible = !aisle;
-  miguel.mitre.visible = kind === 'vimpa';
-  miguel.mitre.position.set(0, 1.05, 0.66); miguel.mitre.rotation.set(0, 0, 0);
+  for (const key in kids) {
+    const kd = kids[key];
+    kd.mitre.visible = kind === 'vimpa';
+    kd.mitre.position.set(0, 1.05, 0.66); kd.mitre.rotation.set(0, 0, 0);
+    kd.body.visible = true; kd.body.rotation.set(0, 0, 0); kd.head.rotation.set(0, 0, 0);
+    kd.armL.rotation.set(0, 0, -0.12); kd.armR.rotation.set(0, 0, 0.12);
+    kd.props.thur.userData.swing.rotation.set(0, 0, 0);
+    for (const c of ['agua', 'vinho', 'toalha']) kd.props.tray.userData[c].position.y = c === 'toalha' ? 0.04 : 0.015;
+  }
   candleGroup.visible = kind === 'velas';
+  priest.g.visible = kind === 'sino' || kind === 'galhetas' || kind === 'incenso';
+  priest.g.position.set(kind === 'galhetas' ? 1.0 : 0, 0.3, -9.75);
+  priest.g.rotation.y = kind === 'galhetas' ? 0.6 : 0;
+  priest.head.rotation.set(0, 0, 0);
   for (const o of obstacles) scene.remove(o); obstacles.length = 0;
-  miguel.body.visible = true;
-  miguel.armL.rotation.set(0, 0, -0.12); miguel.armR.rotation.set(0, 0, 0.12);
+  $('#meter').classList.remove('edges'); $('#zone2').hidden = true;
+  $('#choices').hidden = true; bubble(null);
+}
+
+function showScreen(id) {
+  for (const s of ['menu', 'practice', 'board', 'intro', 'end']) $('#' + s).hidden = s !== id;
+  if (id) { $('#hud').hidden = true; $('#meter').hidden = true; $('#choices').hidden = true; bubble(null); }
+}
+
+function refreshMenu() {
+  $('#menu-name').textContent = N.nome;
+  $('#menu-text').textContent = `${N.O} ${N.nome} é ${N.o} coroinha mais animad${N.x} da paróquia. Ajude ${N.ele} a servir a missa sem passar vergonha na frente do padre.`;
+  for (const b of document.querySelectorAll('#seg-hero button')) b.setAttribute('aria-pressed', String(b.dataset.v === heroKey));
+  for (const b of document.querySelectorAll('#seg-dif button')) b.setAttribute('aria-pressed', String(b.dataset.v === difKey));
+  $('#player-name').placeholder = `Ex.: ${N.nome}`;
 }
 
 function goMenu() {
   S.mode = 'menu'; resetWorld('menu'); setProp('vimpa');
-  miguel.root.position.set(0, 0, 0); miguel.root.rotation.y = 0;
-  $('#hud').hidden = true; $('#meter').hidden = true; $('#end').hidden = true; $('#intro').hidden = true; $('#menu').hidden = false;
-  showBest();
+  hero.root.position.set(0, 0, 0); hero.root.rotation.y = 0;
+  refreshMenu(); showScreen('menu');
 }
 
-function showIntro(i, result) {
-  S.mode = 'intro'; S.phase = i;
-  const ph = PHASES[i];
-  $('#menu').hidden = true; $('#end').hidden = true; $('#meter').hidden = true; $('#hud').hidden = true;
-  $('#intro-eyebrow').textContent = `Desafio ${i + 1} de ${PHASES.length}`;
-  $('#intro-title').textContent = ph.title; $('#intro-text').textContent = ph.text; $('#intro-how').textContent = ph.how;
+function startRun(list, full) {
+  S.score = 0; S.run = { full, list, pos: 0 };
+  showIntro(0);
+}
+
+function showIntro(pos, result) {
+  S.mode = 'intro'; S.run.pos = pos; S.phase = S.run.list[pos];
+  const ph = PHASES[S.phase];
+  showScreen('intro');
+  $('#intro-eyebrow').textContent = S.run.full ? `Desafio ${pos + 1} de ${S.run.list.length} · ${DIFS[difKey].label}` : `Treino · ${DIFS[difKey].label}`;
+  $('#intro-title').textContent = ph.title; $('#intro-text').textContent = ph.text(); $('#intro-how').textContent = ph.how;
   $('#intro-result').hidden = !result; $('#intro-joke').hidden = !result;
   if (result) { $('#intro-result').textContent = result.points; $('#intro-joke').textContent = result.joke; }
-  $('#intro').hidden = false;
   // prepara o cenário para mostrar ao fundo
   resetWorld(ph.key === 'proc' ? 'menu' : ph.key);
   placeForPhase(ph.key);
@@ -624,24 +836,38 @@ function showIntro(i, result) {
 }
 
 function placeForPhase(k) {
-  if (k === 'proc') { miguel.root.position.set(0, 0, 0); miguel.root.rotation.y = Math.PI; setProp('cross'); }
-  if (k === 'velas') { miguel.root.position.set(0, 0, -3.4); miguel.root.rotation.y = 0; setProp('lighter'); }
-  if (k === 'sino') { miguel.root.position.set(0, 0, -3.0); miguel.root.rotation.y = 0; setProp('bell'); }
-  if (k === 'vimpa') { miguel.root.position.set(0, 0, 0); miguel.root.rotation.y = 0; setProp('vimpa'); miguel.mitre.visible = true; }
+  const r = hero.root;
+  if (k === 'proc') { r.position.set(0, 0, 0); r.rotation.y = Math.PI; setProp('cross'); }
+  if (k === 'velas') { r.position.set(0, 0, -3.4); r.rotation.y = 0; setProp('lighter'); }
+  if (k === 'incenso') { r.position.set(0, 0, -3.0); r.rotation.y = 0; setProp('thur'); }
+  if (k === 'galhetas') { r.position.set(2.45, 0.3, -8.5); r.rotation.y = -0.95; setProp('tray'); }
+  if (k === 'sino') { r.position.set(0, 0, -3.0); r.rotation.y = 0; setProp('bell'); }
+  if (k === 'vimpa') { r.position.set(0, 0, 0); r.rotation.y = 0; setProp('vimpa'); hero.mitre.visible = true; }
 }
 
 function startPhase() {
-  const k = PHASES[S.phase].key;
-  S.mode = 'play'; S.ps = 0;
-  $('#intro').hidden = true; $('#hud').hidden = false;
+  const k = PHASES[S.phase].key, m = DM();
+  S.mode = 'play'; S.ps = 0; phaseStartScore = S.score;
+  showScreen(null); $('#hud').hidden = false;
   resetWorld(k); placeForPhase(k);
   Object.keys(P).forEach(key => delete P[key]);
   P.t = 0;
-  if (k === 'proc') { Object.assign(P, { lane: 1, lives: 3, time: 30, spawn: 0.8, inv: 0, acc: 0, speed: 11 }); }
+  if (k === 'proc') { Object.assign(P, { lane: 1, lives: 3, time: 30, spawn: 0.8, inv: 0, acc: 0, speed: 11 * m }); }
   if (k === 'velas') {
-    Object.assign(P, { time: 25, wind: 1.6, targetX: 0, faceT: 0, lightCount: 0, windMsg: false });
+    Object.assign(P, { time: 25, wind: 1.6, targetX: 0, faceT: 0, windMsg: false });
     candles.forEach(c => setLit(c, false));
     toast('Acenda as velas!', 'gold');
+  }
+  if (k === 'incenso') {
+    Object.assign(P, { time: 25, A: 0.75, ph: -Math.PI / 2, visit: 0, scored: -1, lastSign: -1, hits: 0, perfects: 0, smokeT: 0 });
+    const z = $('#zone'), z2 = $('#zone2');
+    z.style.left = '0%'; z.style.width = '15%'; z2.style.left = '85%'; z2.style.width = '15%'; z2.hidden = false;
+    $('#meter').classList.add('edges'); $('#meter-label').textContent = 'Balanço do turíbulo'; $('#meter').hidden = false;
+    toast('Balança o turíbulo!', 'gold');
+  }
+  if (k === 'galhetas') {
+    Object.assign(P, { round: 0, rounds: 10, want: null, prev: null, tLeft: 0, tMax: 1, wait: 0.6, hits: 0, offer: 0, offerItem: null, react: 0, reactYes: true });
+    $('#choices').hidden = false; $('#order-fill').style.width = '0%';
   }
   if (k === 'sino') {
     Object.assign(P, { round: 0, rounds: 8, p: 0, dir: 1, wait: 0, swing: 0, perfects: 0, hits: 0 });
@@ -661,53 +887,94 @@ function endPhase() {
   let bonus = 0, joke = '';
   if (k === 'proc') {
     bonus = P.lives * 20;
-    joke = P.lives === 3 ? 'Procissão perfeita. Nem o Totó percebeu que o Miguel passou.'
-      : P.lives > 0 ? 'Chegou no altar meio descabelado, mas chegou.'
+    joke = P.lives === 3 ? `Procissão perfeita. Nem o Totó percebeu que ${N.o} ${N.nome} passou.`
+      : P.lives > 0 ? `Chegou no altar meio descabelad${N.x}, mas chegou.`
       : 'Chegou no altar... depois de muita confusão no corredor.';
   }
   if (k === 'velas') {
     const lit = candles.filter(c => c.lit).length; bonus = lit * 10;
     joke = lit >= 5 ? 'O altar está brilhando. A Dona Cida até tirou foto.' : lit >= 3 ? 'Tá meio escurinho, mas dá para rezar.' : 'O padre vai precisar de lanterna.';
   }
+  if (k === 'incenso') {
+    bonus = Math.round(P.A * 30);
+    joke = P.perfects >= 5 ? 'A igreja ficou perfumada até a última fila.' : P.hits >= 6 ? 'Fumaça bonita. A vovó da frente só tossiu uma vez.' : 'Teve mais tosse do que fumaça, mas valeu a intenção.';
+  }
+  if (k === 'galhetas') {
+    joke = P.hits >= 9 ? 'O padre nem precisou olhar: tudo chegou na hora certa.' : P.hits >= 6 ? 'Uma ou outra troca, mas o ofertório saiu.' : 'O padre lavou as mãos com vinho. Vai virar história na paróquia.';
+  }
   if (k === 'sino') {
     joke = P.perfects >= 5 ? 'O padre fez um joinha discreto lá do altar.' : P.hits >= 5 ? 'Sino bem tocado. A vovó da primeira fila aprovou.' : 'Teve sino fora de hora, mas foi com muita fé.';
   }
   if (k === 'vimpa') {
     bonus = P.lives * 20;
-    joke = P.lives === 3 ? 'A mitra não balançou nem um pouco. O bispo quer levar o Miguel para a catedral.'
-      : P.lives > 0 ? 'A mitra caiu, mas o Miguel pegou de volta tão rápido que quase ninguém viu.'
+    joke = P.lives === 3 ? `A mitra não balançou nem um pouco. O bispo quer levar ${N.o} ${N.nome} para a catedral.`
+      : P.lives > 0 ? `A mitra caiu, mas ${N.o} ${N.nome} pegou de volta tão rápido que quase ninguém viu.`
       : 'A mitra foi parar no chão algumas vezes. O bispo riu e deu a bênção mesmo assim.';
   }
   S.ps += bonus; S.score += Math.floor(S.ps); S.ps = 0;
   sfx.win();
-  const points = `+${Math.floor(phaseGain())} pontos` + (bonus ? ` (bônus ${bonus})` : '');
-  if (S.phase < PHASES.length - 1) showIntro(S.phase + 1, { points, joke });
+  const points = `+${S.score - phaseStartScore} pontos` + (bonus ? ` (bônus ${bonus})` : '');
+  if (S.run.pos < S.run.list.length - 1) showIntro(S.run.pos + 1, { points, joke });
   else showEnd(joke);
 }
-let phaseStartScore = 0;
-function phaseGain() { return S.score - phaseStartScore; }
+
+/* ---------- Placar ---------- */
+let board = store.get('placar', []);
+if (!Array.isArray(board)) board = [];
+function renderBoard(el, list, meId) {
+  el.textContent = '';
+  if (!list.length) { const li = document.createElement('li'); li.className = 'empty'; li.textContent = 'Ninguém jogou a missa completa ainda.'; el.append(li); return; }
+  list.forEach((e, i) => {
+    const li = document.createElement('li'); if (e.id === meId) li.className = 'me';
+    const pos = document.createElement('span'); pos.className = 'pos'; pos.textContent = i + 1;
+    const who = document.createElement('span'); who.className = 'who'; who.textContent = e.nome;
+    const sm = document.createElement('small'); sm.textContent = `${HEROES[e.hero] ? HEROES[e.hero].nome : ''} · ${DIFS[e.dif] ? DIFS[e.dif].label : ''}`; who.append(sm);
+    const pts = document.createElement('span'); pts.className = 'pts'; pts.textContent = e.pts;
+    li.append(pos, who, pts); el.append(li);
+  });
+}
 
 function showEnd(lastJoke) {
   S.mode = 'end'; resetWorld('menu'); setProp('vimpa');
-  miguel.root.position.set(0, 0, 0); miguel.root.rotation.y = 0;
-  $('#hud').hidden = true; $('#meter').hidden = true; $('#intro').hidden = true;
-  const sc = S.score;
-  const rank = sc < 350 ? 'Coroinha em treinamento' : sc < 550 ? 'Coroinha caprichoso' : sc < 750 ? 'Coroinha de ouro' : 'Coroinha lendário';
-  const line = sc < 350 ? 'Faz parte. Até o coroinha mais experiente já tropeçou na batina.'
-    : sc < 550 ? 'Missa bem servida. O Miguel ganhou um pedaço de bolo depois.'
-    : sc < 750 ? 'O padre já quer o Miguel em todas as missas do mês.'
-    : 'Dizem que até o pombo ficou para a bênção final.';
-  $('#end-score').textContent = sc; $('#end-rank').textContent = rank; $('#end-line').textContent = `${lastJoke} ${line}`;
-  saveBest(sc); showBest();
-  $('#end').hidden = false;
+  hero.root.position.set(0, 0, 0); hero.root.rotation.y = 0;
+  showScreen('end');
+  const sc = S.score, full = S.run.full;
+  $('#end-eyebrow').textContent = full ? `Fim da missa · ${DIFS[difKey].label}` : `Treino: ${PHASES[S.phase].title}`;
+  $('#end-score').textContent = sc;
+  if (full) {
+    const rank = sc < 700 ? 'Coroinha em treinamento' : sc < 1100 ? `Coroinha caprichos${N.x}` : sc < 1500 ? 'Coroinha de ouro' : 'Coroinha lendário';
+    const line = sc < 700 ? 'Faz parte. Até o coroinha mais experiente já tropeçou na batina.'
+      : sc < 1100 ? `Missa bem servida. ${N.O} ${N.nome} ganhou um pedaço de bolo depois.`
+      : sc < 1500 ? `O padre já quer ${N.o} ${N.nome} em todas as missas do mês.`
+      : 'Dizem que até o pombo ficou para a bênção final.';
+    $('#end-rank').textContent = rank; $('#end-line').textContent = `${lastJoke} ${line}`;
+    $('#save-form').hidden = false; $('#end-board').hidden = true;
+    $('#player-name').value = store.get('nome', '');
+  } else {
+    $('#end-rank').textContent = 'Treino concluído'; $('#end-line').textContent = lastJoke;
+    $('#save-form').hidden = true; $('#end-board').hidden = true;
+  }
 }
+$('#save-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const nome = ($('#player-name').value.trim() || N.nome).slice(0, 16);
+  store.set('nome', nome);
+  const entry = { id: Date.now(), nome, pts: S.score, hero: heroKey, dif: difKey };
+  board.push(entry); board.sort((a, b) => b.pts - a.pts); board = board.slice(0, 10); store.set('placar', board);
+  $('#player-name').blur();
+  $('#save-form').hidden = true;
+  renderBoard($('#end-board'), board.slice(0, 5), entry.id); $('#end-board').hidden = false;
+  const place = board.findIndex(b => b.id === entry.id);
+  toast(place === 0 ? 'Novo recorde da família!' : place >= 0 ? `${place + 1}º lugar no placar!` : 'Salvo!', 'gold');
+});
 
 /* ---------- Sino ---------- */
 function newBellRound() {
+  const m = DM();
   P.p = Math.random() < 0.5 ? 0 : 1; P.dir = P.p === 0 ? 1 : -1;
-  P.zw = Math.max(0.11, 0.26 - P.round * 0.02);
+  P.zw = Math.min(0.32, Math.max(0.09, (0.26 - P.round * 0.02) / m));
   P.zc = rand(0.2 + P.zw / 2, 0.8 - P.zw / 2);
-  P.spd = 0.75 + P.round * 0.12;
+  P.spd = (0.75 + P.round * 0.12) * m;
   P.wait = 0;
   const z = $('#zone'); z.style.left = ((P.zc - P.zw / 2) * 100) + '%'; z.style.width = (P.zw * 100) + '%';
   $('#meter-label').textContent = `Toque ${P.round + 1} de ${P.rounds}`;
@@ -722,6 +989,62 @@ function ringBell() {
   P.wait = 0.9; hud();
 }
 
+/* ---------- Turíbulo ---------- */
+function swingThurible() {
+  const s = Math.sin(P.ph), pos = 0.5 + 0.5 * P.A * s;
+  const near = Math.abs(s) > 0.8 && P.visit !== P.scored;
+  if (near) {
+    P.scored = P.visit;
+    const perfect = pos < 0.07 || pos > 0.93, inZone = pos < 0.15 || pos > 0.85;
+    if (perfect) { S.ps += 30; P.perfects++; P.hits++; toast('Perfeito!', 'gold'); }
+    else if (inZone) { S.ps += 20; P.hits++; toast('Boa!'); }
+    else { S.ps += 5; toast('Mais forte!'); }
+    P.A = Math.min(1, P.A + 0.17);
+    const w = thurWorld(); puff(w.x, w.y + 0.1, w.z, 0.7, 1.6); sfx.chime();
+  } else {
+    P.A = Math.max(0.15, P.A - 0.12); sfx.miss();
+    toast(pick(['Fora do ritmo!', 'Quase acertou o padre!', 'Cuidado com a vovó da frente!', 'Calma, não é pandeiro!']), 'bad');
+  }
+  hud();
+}
+const tmpV = new THREE.Vector3();
+function thurWorld() { return hero.props.thur.userData.swing.children[2].getWorldPosition(tmpV); }
+
+/* ---------- Galhetas ---------- */
+const ITEMS = { agua: 'a água', vinho: 'o vinho', toalha: 'a toalha' };
+const ASKS = {
+  agua: ['Água, por favor!', 'Agora a água!', 'Um pouquinho de água!'],
+  vinho: ['O vinho, por favor!', 'Agora o vinho!', 'Traz o vinho!'],
+  toalha: ['A toalha, por favor!', 'Para lavar as mãos!', 'A toalhinha!'],
+};
+function newOrder() {
+  const opts = Object.keys(ITEMS).filter(o => o !== P.prev || Math.random() < 0.3);
+  P.want = pick(opts); P.prev = P.want;
+  P.tMax = Math.max(1.0, 2.7 - P.round * 0.15) / DM(); P.tLeft = P.tMax;
+  bubble(pick(ASKS[P.want]));
+  hud();
+}
+function choose(c) {
+  if (S.mode !== 'play' || PHASES[S.phase].key !== 'galhetas' || !P.want) return;
+  ac();
+  const want = P.want; P.want = null; bubble(null);
+  P.offer = 0.7; P.offerItem = c; P.react = 0.8;
+  if (c === want) {
+    const pts = 15 + Math.round(10 * P.tLeft / P.tMax);
+    S.ps += pts; P.hits++; P.reactYes = true; sfx.coin();
+    toast(pick(['Isso!', 'Na hora certa!', 'Muito bem!', 'Perfeito!']), 'gold');
+  } else {
+    P.reactYes = false; sfx.miss();
+    const msg = want === 'agua' && c === 'vinho' ? 'Vinho na hora da água? O padre arregalou os olhos!'
+      : want === 'vinho' && c === 'agua' ? 'Só água? O padre fez cara de dúvida.'
+      : c === 'toalha' ? 'Toalha? O padre riu baixinho.'
+      : `O padre pediu a toalha e ganhou ${ITEMS[c]}!`;
+    toast(msg, 'bad');
+  }
+  P.round++; P.wait = 0.9; hud();
+}
+for (const b of document.querySelectorAll('#choices button')) b.addEventListener('click', () => choose(b.dataset.c));
+
 /* ---------- Entrada ---------- */
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
 canvas.addEventListener('pointerdown', e => {
@@ -735,6 +1058,7 @@ canvas.addEventListener('pointerdown', e => {
     const hit = ray.intersectObjects(hitMeshes)[0];
     if (hit) lightCandle(candles[hit.object.userData.idx]);
   }
+  if (k === 'incenso') swingThurible();
   if (k === 'sino') ringBell();
   if (k === 'vimpa') nudgeMitre(e.clientX < window.innerWidth / 2 ? -1 : 1);
 });
@@ -744,8 +1068,9 @@ window.addEventListener('keydown', e => {
   const k = PHASES[S.phase].key;
   if (k === 'proc' && (e.key === 'ArrowLeft' || e.key === 'a')) moveLane(-1);
   if (k === 'proc' && (e.key === 'ArrowRight' || e.key === 'd')) moveLane(1);
-  if (k === 'sino' && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); ringBell(); }
+  if ((k === 'sino' || k === 'incenso') && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); k === 'sino' ? ringBell() : swingThurible(); }
   if (k === 'velas' && /^[1-6]$/.test(e.key)) lightCandle(candles[+e.key - 1]);
+  if (k === 'galhetas' && /^[1-3]$/.test(e.key)) choose(['agua', 'vinho', 'toalha'][+e.key - 1]);
   if (k === 'vimpa' && (e.key === 'ArrowLeft' || e.key === 'a')) nudgeMitre(-1);
   if (k === 'vimpa' && (e.key === 'ArrowRight' || e.key === 'd')) nudgeMitre(1);
 });
@@ -756,9 +1081,31 @@ function lightCandle(c) {
   setLit(c, true); S.ps += 10; sfx.light(); hud();
 }
 
-$('#btn-start').addEventListener('click', () => { ac(); S.score = 0; phaseStartScore = 0; showIntro(0); });
-$('#btn-go').addEventListener('click', () => { ac(); phaseStartScore = S.score; startPhase(); });
-$('#btn-again').addEventListener('click', () => { ac(); S.score = 0; phaseStartScore = 0; showIntro(0); });
+/* ---------- Menu ---------- */
+document.querySelectorAll('#seg-hero button').forEach(b => b.addEventListener('click', () => {
+  setHero(b.dataset.v); goMenu();
+}));
+document.querySelectorAll('#seg-dif button').forEach(b => b.addEventListener('click', () => {
+  difKey = b.dataset.v; store.set('dif', difKey); refreshMenu();
+}));
+{
+  const list = $('#pick-list');
+  PHASES.forEach((ph, i) => {
+    const b = document.createElement('button');
+    const n = document.createElement('b'); n.textContent = `Desafio ${i + 1}`;
+    b.append(n, ph.title.replace(/^(A|As|O) /, '').replace(/^./, c => c.toUpperCase()));
+    b.addEventListener('click', () => { ac(); startRun([i], false); });
+    list.append(b);
+  });
+}
+$('#btn-start').addEventListener('click', () => { ac(); startRun(PHASES.map((_, i) => i), true); });
+$('#btn-practice').addEventListener('click', () => { S.mode = 'practice'; showScreen('practice'); });
+$('#btn-board').addEventListener('click', () => { S.mode = 'board'; renderBoard($('#board-list'), board); showScreen('board'); });
+$('#btn-back1').addEventListener('click', goMenu);
+$('#btn-back2').addEventListener('click', goMenu);
+$('#btn-go').addEventListener('click', () => { ac(); startPhase(); });
+$('#btn-again').addEventListener('click', () => { ac(); startRun(S.run.list, S.run.full); });
+$('#btn-menu').addEventListener('click', goMenu);
 
 /* ---------- Câmera ---------- */
 function fitDist(halfW) {
@@ -781,16 +1128,23 @@ if (window.visualViewport) visualViewport.addEventListener('resize', resize);
 resize();
 const camPos = new THREE.Vector3(0, 2.4, 5), camLook = new THREE.Vector3(0, 1.2, 0);
 const wantPos = new THREE.Vector3(), wantLook = new THREE.Vector3();
+const portrait = () => camera.aspect < 1;
+function camFor(k) {
+  if (k === 'velas') { const d = Math.max(7, fitDist(2.7)); wantPos.set(0, 3.3, CANDLE_Z + d); wantLook.set(0, portrait() ? 1.0 : 1.6, CANDLE_Z); }
+  else if (k === 'vimpa') { const d = Math.max(4.2, fitDist(1.5)); wantPos.set(0, 2.2, d); wantLook.set(0, portrait() ? 0.3 : 1.1, 0); }
+  else if (k === 'galhetas') { const d = Math.max(5, fitDist(2.3)); wantPos.set(1.5, 3.0, -8.9 + d); wantLook.set(1.5, portrait() ? 1.2 : 1.7, -8.9); }
+  else { const d = Math.max(4, fitDist(1.3)); wantPos.set(0, 2.3, -3 + d); wantLook.set(0, portrait() ? 0.8 : 1.2, -3); }
+}
 
-/* ---------- Animações do Miguel ---------- */
+/* ---------- Animações ---------- */
 function walk(speed, t) {
   const s = Math.sin(t * speed);
-  miguel.shoeL.position.z = 0.04 + s * 0.12; miguel.shoeR.position.z = 0.04 - s * 0.12;
-  miguel.body.position.y = Math.abs(s) * 0.06; miguel.body.rotation.z = s * 0.04;
+  hero.shoeL.position.z = 0.04 + s * 0.12; hero.shoeR.position.z = 0.04 - s * 0.12;
+  hero.body.position.y = Math.abs(s) * 0.06; hero.body.rotation.z = s * 0.04;
 }
 function idle(t) {
-  miguel.shoeL.position.z = miguel.shoeR.position.z = 0.04;
-  miguel.body.position.y = Math.sin(t * 2.2) * 0.02; miguel.body.rotation.z = 0;
+  hero.shoeL.position.z = hero.shoeR.position.z = 0.04;
+  hero.body.position.y = Math.sin(t * 2.2) * 0.02; hero.body.rotation.z = 0;
 }
 
 /* ---------- Loop ---------- */
@@ -798,59 +1152,53 @@ const clock = new THREE.Clock();
 function frame() {
   const dt = Math.min(clock.getDelta(), 0.05);
   S.t += dt; const t = S.t;
-  const k = PHASES[S.phase].key;
-  const mp = miguel.root.position;
+  const k = PHASES[S.phase].key, m = DM();
+  const mp = hero.root.position;
+  priest.head.position.y = 2.32 + Math.sin(t * 1.8) * 0.01;
 
-  if (S.mode === 'menu' || S.mode === 'end' || (S.mode === 'intro' && k === 'proc')) {
+  if (S.mode !== 'play' && (S.mode !== 'intro' || k === 'proc')) {
     idle(t);
-    if (S.mode === 'intro') { miguel.root.rotation.y = Math.PI; setProp('cross'); }
+    if (S.mode === 'intro') { hero.root.rotation.y = Math.PI; setProp('cross'); }
     else {
-      miguel.armR.rotation.set(0, 0, 2.5 + Math.sin(t * 8) * 0.35);
-      miguel.head.rotation.z = Math.sin(t * 1.6) * 0.08;
+      hero.armR.rotation.set(0, 0, 2.5 + Math.sin(t * 8) * 0.35);
+      hero.head.rotation.z = Math.sin(t * 1.6) * 0.08;
     }
-    const a = Math.sin(t * 0.35) * 0.55, d = Math.max(4.6, fitDist(1.9));
-    wantPos.set(Math.sin(a) * d, 2.4, Math.cos(a) * d);
+    const a = Math.sin(t * 0.35) * 0.55, d = Math.max(4.6, fitDist(2.1));
+    wantPos.set(Math.sin(a) * d, 2.6, Math.cos(a) * d);
     if (S.mode === 'intro') wantPos.set(0, 3.2, Math.max(6, fitDist(2)));
-    wantLook.set(0, camera.aspect < 1 ? -0.9 : 1.0, 0);
+    wantLook.set(0, portrait() ? -1.9 : 1.0, 0);
   }
 
   if (S.mode === 'intro' && k !== 'proc') {
-    idle(t); miguel.head.rotation.z = 0;
-    if (k === 'velas') {
-      const d = Math.max(7, fitDist(2.7));
-      wantPos.set(0, 3.3, CANDLE_Z + d); wantLook.set(0, camera.aspect < 1 ? 1.0 : 1.6, CANDLE_Z);
-    } else if (k === 'vimpa') {
-      const d = Math.max(4.2, fitDist(1.5));
-      wantPos.set(0, 2.2, d); wantLook.set(0, camera.aspect < 1 ? 0.3 : 1.1, 0);
-    } else {
-      const d = Math.max(4, fitDist(1.3));
-      wantPos.set(0, 2.3, -3 + d); wantLook.set(0, camera.aspect < 1 ? 0.8 : 1.2, -3);
-    }
+    idle(t); hero.head.rotation.z = 0;
+    if (k === 'galhetas') { hero.armL.rotation.set(-1.15, 0, 0.25); hero.armR.rotation.set(-1.15, 0, -0.25); }
+    if (k === 'incenso') { hero.armR.rotation.set(-0.9, 0, -0.1); hero.props.thur.userData.swing.rotation.z = Math.sin(t * 2.5) * 0.4; }
+    camFor(k);
   }
 
   if (S.mode === 'play' && k === 'proc') {
-    P.t += dt; P.time -= dt; P.speed = 11 + P.t * 0.25;
+    P.t += dt; P.time -= dt; P.speed = (11 + P.t * 0.25) * m;
     const v = P.speed * dt;
     floorTex.offset.y += v / 2; carpetTex.offset.y += v / 2;
     for (const o of scrollers) { o.position.z += v; if (o.position.z > 8) o.position.z -= SPAN; }
     mp.x += (LANES[P.lane] - mp.x) * Math.min(1, dt * 12);
-    miguel.body.rotation.y = (LANES[P.lane] - mp.x) * -0.3;
+    hero.body.rotation.y = (LANES[P.lane] - mp.x) * -0.3;
     walk(11, t);
-    miguel.armL.rotation.set(-1.15, 0, 0.25); miguel.armR.rotation.set(-1.15, 0, -0.25);
+    hero.armL.rotation.set(-1.15, 0, 0.25); hero.armR.rotation.set(-1.15, 0, -0.25);
     P.acc += dt; if (P.acc >= 0.2) { P.acc -= 0.2; S.ps += 1; }
 
     P.spawn -= dt;
     if (P.spawn <= 0) {
-      P.spawn = Math.max(0.5, 1.05 - P.t * 0.018) * rand(0.85, 1.2);
+      P.spawn = Math.max(0.5, 1.05 - P.t * 0.018) * rand(0.85, 1.2) / m;
       const free = [0, 1, 2];
       const l1 = free.splice(Math.floor(Math.random() * 3), 1)[0];
       spawn(pick(OB_TYPES), l1, -46);
-      if (P.t > 10 && Math.random() < 0.35) spawn(pick(OB_TYPES), free.splice(Math.floor(Math.random() * 2), 1)[0], -46);
+      if (P.t > 10 && Math.random() < 0.35 * m) spawn(pick(OB_TYPES), free.splice(Math.floor(Math.random() * 2), 1)[0], -46);
       if (Math.random() < 0.65) spawn('sininho', pick(free), -46 - rand(1, 3));
     }
 
     P.inv -= dt;
-    miguel.body.visible = P.inv > 0 ? Math.floor(t * 14) % 2 === 0 : true;
+    hero.body.visible = P.inv > 0 ? Math.floor(t * 14) % 2 === 0 : true;
     for (let i = obstacles.length - 1; i >= 0; i--) {
       const o = obstacles[i], u = o.userData;
       if (u.knocked) {
@@ -883,7 +1231,7 @@ function frame() {
   if (S.mode === 'play' && k === 'velas') {
     P.t += dt; P.time -= dt; P.wind -= dt;
     if (P.wind <= 0) {
-      P.wind = Math.max(0.45, 1.35 - P.t * 0.035) + rand(0, 0.35);
+      P.wind = (Math.max(0.45, 1.35 - P.t * 0.035) + rand(0, 0.35)) / m;
       const lit = candles.filter(c => c.lit);
       if (lit.length) {
         const c = pick(lit); setLit(c, false); puff(c.x, FLAME_Y + 0.05, CANDLE_Z); sfx.puff();
@@ -895,16 +1243,61 @@ function frame() {
     if (Math.abs(dx) > 0.05) walk(12, t); else idle(t);
     P.faceT -= dt;
     const face = P.faceT > 0 ? Math.PI : 0;
-    miguel.root.rotation.y += (face - miguel.root.rotation.y) * Math.min(1, dt * 10);
+    hero.root.rotation.y += (face - hero.root.rotation.y) * Math.min(1, dt * 10);
     const raise = P.faceT > 0 ? -1.9 : -1.1;
-    miguel.armL.rotation.x += (raise - miguel.armL.rotation.x) * Math.min(1, dt * 12);
-    miguel.armR.rotation.x = miguel.armL.rotation.x; miguel.armL.rotation.z = 0.25; miguel.armR.rotation.z = -0.25;
-    miguel.props.lighter.rotation.x = P.faceT > 0 ? 0.15 : 0.35;
-    miguel.props.lighter.position.y = P.faceT > 0 ? 1.15 : 0.88;
-    const d = Math.max(7, fitDist(2.7));
-    wantPos.set(0, 3.3, CANDLE_Z + d); wantLook.set(0, camera.aspect < 1 ? 1.0 : 1.6, CANDLE_Z);
+    hero.armL.rotation.x += (raise - hero.armL.rotation.x) * Math.min(1, dt * 12);
+    hero.armR.rotation.x = hero.armL.rotation.x; hero.armL.rotation.z = 0.25; hero.armR.rotation.z = -0.25;
+    hero.props.lighter.rotation.x = P.faceT > 0 ? 0.15 : 0.35;
+    hero.props.lighter.position.y = P.faceT > 0 ? 1.15 : 0.88;
+    camFor(k);
     hud();
     if (P.time <= 0) endPhase();
+  }
+
+  if (S.mode === 'play' && k === 'incenso') {
+    P.t += dt; P.time -= dt;
+    const period = Math.max(0.9, 1.6 - P.t * 0.025) / m;
+    P.ph += (Math.PI * 2 / period) * dt;
+    const s = Math.sin(P.ph), sign = s >= 0 ? 1 : -1;
+    if (sign !== P.lastSign) { P.lastSign = sign; P.visit++; }
+    P.A = Math.max(0.15, P.A - dt * 0.07 * m);
+    hero.props.thur.userData.swing.rotation.z = P.A * s * 1.1;
+    hero.armR.rotation.set(-0.9, 0, -0.1 + P.A * s * 0.15); hero.armL.rotation.set(-0.3, 0, -0.15);
+    idle(t);
+    P.smokeT -= dt;
+    if (P.smokeT <= 0) { P.smokeT = 0.55 - 0.4 * P.A; const w = thurWorld(); puff(w.x, w.y + 0.05, w.z, 0.3 + P.A * 0.3, 1.3); }
+    $('#needle').style.left = ((0.5 + 0.5 * P.A * s) * 100) + '%';
+    priest.head.rotation.z = Math.sin(t * 1.2) * 0.05;
+    camFor(k);
+    hud();
+    if (P.time <= 0) endPhase();
+  }
+
+  if (S.mode === 'play' && k === 'galhetas') {
+    idle(t);
+    hero.armL.rotation.set(-1.15, 0, 0.25); hero.armR.rotation.set(-1.15, 0, -0.25);
+    const tray = hero.props.tray.userData;
+    P.offer = Math.max(0, P.offer - dt);
+    for (const c of ['agua', 'vinho', 'toalha']) {
+      const base = c === 'toalha' ? 0.04 : 0.015, up = c === P.offerItem ? Math.sin(Math.min(1, P.offer / 0.7) * Math.PI) * 0.25 : 0;
+      tray[c].position.y = base + up;
+    }
+    P.react = Math.max(0, P.react - dt);
+    priest.head.rotation.set(P.react > 0 && P.reactYes ? Math.sin(t * 16) * 0.2 : 0, P.react > 0 && !P.reactYes ? Math.sin(t * 16) * 0.3 : 0, 0);
+    if (P.wait > 0) {
+      P.wait -= dt;
+      if (P.wait <= 0) { if (P.round >= P.rounds) endPhase(); else newOrder(); }
+    } else if (P.want) {
+      P.tLeft -= dt;
+      if (P.tLeft <= 0) {
+        P.want = null; bubble(null); P.react = 0.8; P.reactYes = false; sfx.miss();
+        toast(pick(['O padre ficou esperando...', 'Acorda! O padre está esperando.']), 'bad');
+        P.round++; P.wait = 0.9;
+      }
+    }
+    $('#order-fill').style.width = (P.want ? Math.max(0, P.tLeft / P.tMax) * 100 : 0) + '%';
+    camFor(k);
+    hud();
   }
 
   if (S.mode === 'play' && k === 'sino') {
@@ -918,22 +1311,21 @@ function frame() {
     }
     $('#needle').style.left = (P.p * 100) + '%';
     P.swing = Math.max(0, P.swing - dt * 1.4);
-    miguel.props.bell.rotation.z = Math.sin(t * 30) * 0.6 * P.swing;
-    miguel.armR.rotation.set(0, 0, 2.3 + Math.sin(t * 30) * 0.15 * P.swing);
-    miguel.armL.rotation.set(-0.3, 0, -0.15);
-    miguel.head.rotation.z = Math.sin(t * 2) * 0.05;
-    const d = Math.max(4, fitDist(1.3));
-    wantPos.set(0, 2.3, -3 + d); wantLook.set(0, camera.aspect < 1 ? 0.8 : 1.2, -3);
+    hero.props.bell.rotation.z = Math.sin(t * 30) * 0.6 * P.swing;
+    hero.armR.rotation.set(0, 0, 2.3 + Math.sin(t * 30) * 0.15 * P.swing);
+    hero.armL.rotation.set(-0.3, 0, -0.15);
+    hero.head.rotation.z = Math.sin(t * 2) * 0.05;
+    camFor(k);
   }
 
   if (S.mode === 'play' && k === 'vimpa') {
     P.t += dt; P.time -= dt;
-    // procissão de saída: o Miguel caminha em direção à câmera
+    // procissão de saída: o coroinha caminha em direção à câmera
     const v = 3.2 * dt;
     floorTex.offset.y -= v / 2; carpetTex.offset.y -= v / 2;
     for (const o of scrollers) { o.position.z -= v; if (o.position.z < 8 - SPAN) o.position.z += SPAN; }
-    walk(6, t); miguel.head.rotation.z = 0;
-    const mt = miguel.mitre;
+    walk(6, t); hero.head.rotation.z = 0;
+    const mt = hero.mitre;
     if (P.fall > 0) {
       P.fall -= dt;
       const f = 1 - Math.max(0, P.fall) / 1.1;
@@ -943,13 +1335,13 @@ function frame() {
       if (P.fall <= 0) { P.tilt = 0; P.vel = 0; mt.position.set(0, 1.05, 0.66); mt.rotation.set(0, 0, 0); }
     } else {
       P.pushT -= dt;
-      if (P.pushT <= 0) { P.pushT = rand(0.5, 1.0); P.push = rand(-1, 1) * (0.5 + P.t * 0.03); }
+      if (P.pushT <= 0) { P.pushT = rand(0.5, 1.0); P.push = rand(-1, 1) * (0.5 + P.t * 0.03) * m; }
       P.sneeze -= dt;
       if (P.sneeze <= 0) {
-        P.sneeze = rand(5, 8); P.vel += (Math.random() < 0.5 ? -1 : 1) * 1.1;
+        P.sneeze = rand(5, 8); P.vel += (Math.random() < 0.5 ? -1 : 1) * 1.1 * m;
         toast(pick(['O bispo espirrou!', 'Degrau escondido!', 'Uma criança puxou a vimpa!']));
       }
-      P.vel += (P.tilt * 1.4 + P.push) * dt;
+      P.vel += (P.tilt * 1.4 * m + P.push) * dt;
       P.vel *= Math.max(0, 1 - 1.2 * dt);
       P.tilt += P.vel * dt;
       if (Math.abs(P.tilt) >= 1) {
@@ -961,10 +1353,9 @@ function frame() {
         if (P.acc >= 0.2) { P.acc -= 0.2; S.ps += Math.abs(P.tilt) < 0.35 ? 2 : Math.abs(P.tilt) < 0.7 ? 1 : 0; }
       }
     }
-    miguel.body.rotation.z = P.fall > 0 ? 0 : P.tilt * 0.1;
+    hero.body.rotation.z = P.fall > 0 ? 0 : P.tilt * 0.1;
     $('#needle').style.left = ((Math.max(-1, Math.min(1, P.tilt)) + 1) / 2 * 100) + '%';
-    const d = Math.max(4.2, fitDist(1.5));
-    wantPos.set(0, 2.2, d); wantLook.set(0, camera.aspect < 1 ? 0.3 : 1.1, 0);
+    camFor(k);
     hud();
     if (P.fall <= 0 && (P.lives <= 0 || P.time <= 0)) endPhase();
   }
@@ -975,8 +1366,9 @@ function frame() {
     c.flame.scale.set(1, 1.9 * f, 1); c.glow.scale.setScalar(1.1 * f);
   }
   for (let i = smokes.length - 1; i >= 0; i--) {
-    const s = smokes[i]; s.life -= dt; s.s.position.y += dt * 0.8; s.s.scale.setScalar(0.4 + (1.1 - s.life) * 0.9);
-    s.s.material.opacity = Math.max(0, s.life / 1.1) * 0.8;
+    const s = smokes[i]; s.life -= dt; s.s.position.y += dt * 0.8;
+    s.s.scale.setScalar(s.size + (s.max - s.life) * 0.9);
+    s.s.material.opacity = Math.max(0, s.life / s.max) * 0.8;
     if (s.life <= 0) { scene.remove(s.s); s.s.material.dispose(); smokes.splice(i, 1); }
   }
   camPos.lerp(wantPos, Math.min(1, dt * 4)); camLook.lerp(wantLook, Math.min(1, dt * 4));
