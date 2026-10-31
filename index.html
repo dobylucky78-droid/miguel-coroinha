@@ -12,7 +12,8 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
 </head>
-<body><title>Miguel Coroinha</title>
+<body>
+<title>Miguel Coroinha</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -247,10 +248,18 @@ showBest();
 
 /* ---------- Cena ---------- */
 const canvas = $('#c');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-renderer.shadowMap.enabled = true;
+// No celular, menos pixels e sem sombras: evita que o navegador desligue o 3D por falta de memória
+const MOBILE = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (window.matchMedia && matchMedia('(pointer: coarse)').matches);
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'default' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, MOBILE ? 1.5 : 2));
+renderer.shadowMap.enabled = !MOBILE;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+canvas.addEventListener('webglcontextlost', e => {
+  e.preventDefault();
+  const t = document.getElementById('toast');
+  t.textContent = 'O 3D parou. Toque aqui para recarregar.'; t.className = ''; t.style.opacity = '1'; t.style.pointerEvents = 'auto';
+  t.onclick = () => location.reload();
+});
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x1e1533);
 scene.fog = new THREE.Fog(0x1e1533, 16, 46);
@@ -756,12 +765,20 @@ function fitDist(halfW) {
   const t = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
   return halfW / (t * camera.aspect);
 }
+// Tamanho lido do próprio canvas e conferido a cada quadro: alguns navegadores de celular
+// abrem a página com tamanho zero e não avisam quando ele muda
+let lastW = 0, lastH = 0;
 function resize() {
-  const w = window.innerWidth, h = window.innerHeight;
+  const w = canvas.clientWidth || window.innerWidth, h = canvas.clientHeight || window.innerHeight;
+  if (!w || !h || (w === lastW && h === lastH)) return;
+  lastW = w; lastH = h;
   renderer.setSize(w, h, false);
   camera.aspect = w / h; camera.fov = camera.aspect < 1 ? 62 : 46; camera.updateProjectionMatrix();
 }
-window.addEventListener('resize', resize); resize();
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(resize, 200));
+if (window.visualViewport) visualViewport.addEventListener('resize', resize);
+resize();
 const camPos = new THREE.Vector3(0, 2.4, 5), camLook = new THREE.Vector3(0, 1.2, 0);
 const wantPos = new THREE.Vector3(), wantLook = new THREE.Vector3();
 
@@ -966,6 +983,7 @@ function frame() {
   camera.position.copy(camPos); camera.lookAt(camLook);
   sun.position.set(mp.x + 4, 9, mp.z + 6); sun.target.position.set(mp.x, 0, mp.z);
 
+  resize();
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
