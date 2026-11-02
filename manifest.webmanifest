@@ -1,7 +1,7 @@
 {
-  "name": "Miguel Coroinha",
-  "short_name": "Miguel",
-  "description": "Ajude o Miguel coroinha nos desafios da missa.",
+  "name": "Vida de Coroinha",
+  "short_name": "Coroinha",
+  "description": "Os desafios de coroinhas, acólitos e ancilas na missa.",
   "lang": "pt-BR",
   "start_url": "./",
   "scope": "./",

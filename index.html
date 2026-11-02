@@ -7,13 +7,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Miguel">
+<meta name="apple-mobile-web-app-title" content="Coroinha">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
 </head>
 <body>
-<title>Miguel Coroinha</title>
+<title>Vida de Coroinha</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -99,6 +99,14 @@
   .opts button.wrong { border-color: #ff8f8f; background: rgba(255,143,143,.15); }
   .opts button:disabled { cursor: default; }
   .quiz-fb { font-weight: 800; }
+  .quiz-timer { display: flex; align-items: center; gap: 8px; }
+  .quiz-timer .bar { flex: 1; height: 10px; border-radius: 5px; background: rgba(30,21,51,.85); border: 1px solid rgba(255,246,232,.2); overflow: hidden; }
+  .quiz-timer .bar i { display: block; height: 100%; width: 100%; background: var(--gold); border-radius: 5px; }
+  .quiz-timer .bar i.low { background: #ff8f8f; }
+  .quiz-timer span { font-family: var(--display); font-weight: 800; font-size: 18px; color: var(--gold); min-width: 3.2ch; text-align: right; font-variant-numeric: tabular-nums; }
+  .sel { appearance: none; width: 100%; font: 800 15px var(--body); color: var(--linen); background: var(--plum) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23f2c14e' stroke-width='2' fill='none'/%3E%3C/svg%3E") no-repeat right 12px center; border: 2px solid rgba(242,193,78,.5); border-radius: 12px; padding: 10px 34px 10px 12px; cursor: pointer; }
+  .sel:focus-visible { outline: 3px solid var(--linen); outline-offset: 2px; }
+  #seg-scope { align-self: flex-start; }
   .linkbtn { appearance: none; background: none; border: 0; color: var(--mist); font: 700 14px var(--body); text-decoration: underline; cursor: pointer; padding: 4px; }
   .sec-title { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mist); margin-top: 4px; }
   #hud-lives { font-size: 20px; letter-spacing: 2px; color: var(--cassock); line-height: 1.1; }
@@ -152,6 +160,18 @@
     display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; min-width: 0;
   }
   #choices button:active { transform: scale(.96); background: var(--plum); }
+  #altar-choices { margin-top: auto; width: min(100%, 460px); pointer-events: auto; }
+  #altar-choices .choice-row { gap: 8px; }
+  #altar-choices button {
+    appearance: none; border: 2px solid rgba(242,193,78,.6); border-radius: 16px; padding: 8px 4px;
+    background: rgba(30,21,51,.92); color: var(--linen); font-family: var(--display); font-weight: 800; font-size: 16px;
+    display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; min-width: 0; transition: background .12s, transform .12s;
+  }
+  #altar-choices button svg { width: 30px; height: 30px; }
+  #altar-choices button:disabled { opacity: .6; cursor: default; }
+  #altar-choices button.lit { opacity: 1; background: var(--gold); color: #2a1606; transform: scale(1.06); }
+  #altar-choices button:active:not(:disabled) { transform: scale(.96); background: var(--plum); }
+  #ui.coaching #altar-choices { margin-top: 10px; }
   .ic { display: block; width: 26px; height: 40px; position: relative; }
   .ic.cruet::before { content: ""; position: absolute; left: 9px; top: 0; width: 8px; height: 10px; border-radius: 3px 3px 0 0; background: var(--gold); }
   .ic.cruet::after { content: ""; position: absolute; left: 2px; top: 10px; width: 22px; height: 30px; border-radius: 9px 9px 7px 7px; border: 2px solid rgba(255,255,255,.75); background: var(--fill); }
@@ -183,6 +203,8 @@
     font-family: var(--body); font-weight: 800; font-size: 14px; padding: 7px 12px; border-radius: 999px;
   }
   .seg button[aria-pressed="true"] { background: var(--gold); color: #2a1606; }
+  .seg.wide { width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); border-radius: 18px; }
+  .seg.wide button { padding: 7px 2px; font-size: 13px; border-radius: 15px; }
   .result { font-family: var(--display); font-weight: 800; font-size: 22px; color: var(--gold); }
   .btn {
     margin-top: 4px; appearance: none; border: 0; cursor: pointer; border-radius: 16px; padding: 13px 18px;
@@ -262,14 +284,23 @@
       <button data-c="toalha"><i class="ic toalha"></i>Toalha</button>
     </div>
   </div>
+  <div id="altar-choices" hidden>
+    <div class="choice-row">
+      <button data-a="corporal"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="#fbf7ef"/><path d="M12 9v6M9 12h6" stroke="#c62834" stroke-width="2"/></svg>Corporal</button>
+      <button data-a="sanguinho"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="3" width="8" height="18" rx="1.5" fill="#fbf7ef"/><path d="M8 9h8M8 15h8" stroke="#d8cfbd"/><path d="M12 10.5v3M10.5 12h3" stroke="#c62834" stroke-width="1.4"/></svg>Sanguinho</button>
+      <button data-a="calice"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12c0 6-3 8-6 8s-6-2-6-8z" fill="#f2c14e"/><rect x="11" y="11" width="2" height="6" fill="#f2c14e"/><path d="M7 21c0-3 10-3 10 0z" fill="#f2c14e"/></svg>Cálice</button>
+      <button data-a="patena"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="14" rx="9" ry="4" fill="#f2c14e"/><ellipse cx="12" cy="12.5" rx="4.5" ry="2" fill="#fbf7ef"/></svg>Patena</button>
+      <button data-a="missal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6c3-1 6-1 9 1v12c-3-2-6-2-9-1z" fill="#fbf7ef"/><path d="M21 6c-3-1-6-1-9 1v12c3-2 6-2 9-1z" fill="#efe6d4"/><path d="M14 7v9" stroke="#f2c14e" stroke-width="1.5"/><path d="M2 18c4-1.5 7-1 10 1 3-2 6-2.5 10-1v1.5c-4-1-7-.5-10 1.5-3-2-6-2.5-10-1.5z" fill="#c62834"/></svg>Missal</button>
+    </div>
+  </div>
 
   <section id="menu" class="screen">
     <span class="eyebrow">Missa de domingo</span>
-    <h1><span id="menu-name">Miguel</span> <span class="red">Coroinha</span></h1>
+    <h1><span id="menu-name">Miguel</span> <span class="red" id="menu-role">Coroinha</span></h1>
     <p id="menu-text"></p>
     <div class="row">
       <span class="lbl">Personagem</span>
-      <div class="seg" id="seg-hero"><button data-v="miguel" aria-pressed="true">Miguel</button><button data-v="clarinha" aria-pressed="false">Clarinha</button></div>
+      <div class="seg wide" id="seg-hero"><button data-v="miguel" aria-pressed="true">Miguel</button><button data-v="clarinha" aria-pressed="false">Clarinha</button><button data-v="acolito" aria-pressed="false">Acólito</button><button data-v="ancila" aria-pressed="false">Ancila</button></div>
     </div>
     <div class="row">
       <span class="lbl">Dificuldade</span>
@@ -287,18 +318,22 @@
   </section>
 
   <section id="board" class="screen" hidden>
-    <span class="eyebrow">Placar da família</span>
-    <h2>Melhores missas</h2>
+    <span class="eyebrow">Placar</span>
+    <h2>Melhores pontuações</h2>
+    <div class="seg" id="seg-scope" hidden><button data-v="geral" aria-pressed="true">Geral</button><button data-v="local" aria-pressed="false">Neste aparelho</button></div>
+    <label class="lbl" for="board-cat">Desafio</label>
+    <select class="sel" id="board-cat"></select>
     <ol class="board" id="board-list"></ol>
-    <p class="best">O placar fica guardado neste aparelho.</p>
+    <p class="best" id="board-note">O placar fica guardado neste aparelho.</p>
     <button class="btn2" id="btn-back2">Voltar</button>
   </section>
 
   <section id="quiz" class="screen" hidden>
     <span class="result" id="quiz-result"></span>
     <p id="quiz-joke"></p>
-    <span class="eyebrow">Quiz do coroinha · vale 20 pontos</span>
+    <span class="eyebrow" id="quiz-eyebrow">Quiz do altar · vale 20 pontos</span>
     <p class="quiz-q" id="quiz-q"></p>
+    <div class="quiz-timer" aria-hidden="true"><div class="bar"><i id="quiz-bar"></i></div><span id="quiz-secs">15</span></div>
     <div class="opts" id="quiz-opts"></div>
     <p class="quiz-fb" id="quiz-fb" hidden></p>
     <button class="btn" id="btn-quiz-next" hidden>Próximo desafio</button>
@@ -325,7 +360,7 @@
       <div class="save-row"><input id="player-name" maxlength="16" autocomplete="off" enterkeyhint="done" placeholder="Ex.: Miguel"><button class="btn2" type="submit">Salvar</button></div>
       <button class="linkbtn" type="button" id="btn-skip">Não salvar desta vez</button>
     </form>
-    <span class="sec-title" id="end-board-title" hidden>Placar da família</span>
+    <span class="sec-title" id="end-board-title" hidden>Placar</span>
     <ol class="board" id="end-board" hidden></ol>
     <div class="btn-row" id="end-actions"><button class="btn2" id="btn-again">Jogar de novo</button><button class="btn" id="btn-menu">Menu</button></div>
   </section>
@@ -333,7 +368,7 @@
 
 <div id="cover" role="button" tabindex="0" aria-label="Abrir o jogo">
   <div class="medal"><img src="data:image/webp;base64,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" alt="Brasão da Paróquia São José Operário"></div>
-  <h1 class="cover-title">Miguel<span>Coroinha</span></h1>
+  <h1 class="cover-title">Vida de<span>Coroinha</span></h1>
   <p class="cover-sub">Sirva a missa de domingo sem passar vergonha na frente do padre.</p>
   <button class="btn" id="btn-cover" type="button">Tocar para começar</button>
   <span class="parish">Paróquia São José Operário</span>
@@ -407,8 +442,10 @@ $('#mute').addEventListener('click', () => {
 
 /* ---------- Personagens e dificuldade ---------- */
 const HEROES = {
-  miguel: { nome: 'Miguel', o: 'o', O: 'O', ele: 'ele', x: 'o' },
-  clarinha: { nome: 'Clarinha', o: 'a', O: 'A', ele: 'ela', x: 'a' },
+  miguel: { nome: 'Miguel', o: 'o', O: 'O', ele: 'ele', x: 'o', grupo: 'coroinha' },
+  clarinha: { nome: 'Clarinha', o: 'a', O: 'A', ele: 'ela', x: 'a', grupo: 'coroinha' },
+  acolito: { nome: 'Acólito', o: 'o', O: 'O', ele: 'ele', x: 'o', grupo: 'acolito' },
+  ancila: { nome: 'Ancila', o: 'a', O: 'A', ele: 'ela', x: 'a', grupo: 'acolito' },
 };
 const DIFS = { facil: { m: 0.75, label: 'Fácil' }, normal: { m: 1, label: 'Normal' }, dificil: { m: 1.3, label: 'Difícil' } };
 let heroKey = HEROES[store.get('hero', 'miguel')] ? store.get('hero', 'miguel') : 'miguel';
@@ -566,22 +603,48 @@ function makePriest() {
 }
 const priest = makePriest(); scene.add(priest.g);
 
-/* ---------- Coroinhas (Miguel e Clarinha) ---------- */
+/* ---------- Coroinhas (Miguel e Clarinha), Acólito e Ancila ---------- */
 function makeKid(kind) {
   const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+  const albOnly = kind === 'acolito' || kind === 'ancila', girl = kind === 'clarinha' || kind === 'ancila';
   const shoeG = new THREE.BoxGeometry(0.18, 0.12, 0.3);
   const shoeL = add(shoeG, M.black, -0.14, 0.06, 0.04, body), shoeR = add(shoeG, M.black, 0.14, 0.06, 0.04, body);
-  add(new THREE.CylinderGeometry(0.34, 0.5, 1.0, 28), M.red, 0, 0.6, 0, body);
+  // coroinha: batina vermelha; acólito e ancila: batina preta. Os dois com sobrepeliz branca por cima
+  const cassock = albOnly ? mat(0x1d1a22, { roughness: 0.7 }) : M.red;
+  add(new THREE.CylinderGeometry(0.34, 0.5, 1.0, 28), cassock, 0, 0.6, 0, body);
   add(new THREE.CylinderGeometry(0.4, 0.62, 0.55, 28), M.white, 0, 0.88, 0, body);
   const lace = add(new THREE.TorusGeometry(0.61, 0.035, 8, 40), M.white, 0, 0.61, 0, body); lace.rotation.x = Math.PI / 2;
   const sh = add(new THREE.SphereGeometry(0.42, 24, 16), M.white, 0, 1.12, 0, body); sh.scale.set(1, 0.45, 0.85);
-  add(new THREE.CylinderGeometry(0.15, 0.17, 0.17, 20), M.red, 0, 1.28, 0, body);
+  add(new THREE.CylinderGeometry(0.15, 0.17, 0.17, 20), cassock, 0, 1.28, 0, body);
+  if (albOnly) {
+    // cruz de madeira pendurada num cordão
+    const cord = mat(0x3a2a1e), up = new THREE.Vector3(0, 1, 0);
+    for (const s of [-1, 1]) {
+      const a = new THREE.Vector3(s * 0.13, 1.24, 0.3), b = new THREE.Vector3(0, 1.05, 0.5);
+      const c = add(new THREE.CylinderGeometry(0.008, 0.008, a.distanceTo(b), 5), cord, (a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2, body);
+      c.quaternion.setFromUnitVectors(up, b.clone().sub(a).normalize());
+    }
+    add(new THREE.BoxGeometry(0.05, 0.17, 0.025), M.woodDark, 0, 0.96, 0.5, body);
+    add(new THREE.BoxGeometry(0.12, 0.04, 0.025), M.woodDark, 0, 0.99, 0.5, body);
+  }
 
   const head = new THREE.Group(); head.position.set(0, 1.7, 0); body.add(head);
   add(new THREE.SphereGeometry(0.42, 32, 24), M.skin, 0, 0, 0, head);
-  const hr = add(new THREE.SphereGeometry(0.455, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.55), M.hair, 0, 0.03, -0.03, head); hr.rotation.x = -0.4;
+  const hairM = M.hair;
+  const hr = add(new THREE.SphereGeometry(0.455, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.55), hairM, 0, 0.03, -0.03, head); hr.rotation.x = -0.4;
   const fringeG = new THREE.SphereGeometry(0.14, 16, 12);
-  if (kind === 'miguel') {
+  if (kind === 'acolito') {
+    // cabelo curtinho e arrepiado
+    [[-0.22, 0.27, 0.3, 0.4], [-0.07, 0.31, 0.31, -0.3], [0.08, 0.31, 0.31, 0.4], [0.23, 0.27, 0.29, -0.3]].forEach(([x, y, z, r]) => {
+      const f = add(fringeG, hairM, x, y, z, head); f.scale.set(0.8, 0.7, 0.75); f.rotation.z = r;
+    });
+  } else if (kind === 'ancila') {
+    // cabelo puxado para trás, preso num coque
+    [[-0.16, 0.3, 0.27, 1.2], [0.04, 0.33, 0.27, 1.1], [0.22, 0.3, 0.24, 0.9]].forEach(([x, y, z, s]) => {
+      const f = add(fringeG, hairM, x, y, z, head); f.scale.set(1.1 * s, 0.45, 0.7); f.rotation.z = 0.2;
+    });
+    add(new THREE.SphereGeometry(0.18, 16, 12), hairM, 0, 0.1, -0.47, head);
+  } else if (kind === 'miguel') {
     // franja penteada de lado, como na foto
     [[-0.2, 0.25, 0.3, 1.2], [-0.04, 0.3, 0.32, 1.1], [0.14, 0.31, 0.29, 0.9], [0.28, 0.24, 0.24, 0.7]].forEach(([x, y, z, s]) => {
       const f = add(fringeG, M.hair, x, y, z, head); f.scale.set(1.1 * s, 0.6, 0.8); f.rotation.z = -0.35;
@@ -600,7 +663,7 @@ function makeKid(kind) {
   for (const s of [-1, 1]) {
     add(eyeG, M.black, s * 0.14, 0.02, 0.37, head);
     add(hiG, M.white, s * 0.14 + 0.02, 0.05, 0.42, head);
-    if (kind === 'clarinha') add(new THREE.BoxGeometry(0.05, 0.015, 0.015), M.black, s * 0.2, 0.07, 0.36, head).rotation.z = s * 0.5;
+    if (girl) add(new THREE.BoxGeometry(0.05, 0.015, 0.015), M.black, s * 0.2, 0.07, 0.36, head).rotation.z = s * 0.5;
     add(new THREE.SphereGeometry(0.075, 12, 8), M.cheek, s * 0.25, -0.1, 0.32, head).scale.set(1, 0.6, 0.4);
     add(new THREE.SphereGeometry(0.09, 12, 8), M.skin, s * 0.41, 0, 0, head);
   }
@@ -688,10 +751,30 @@ function makeKid(kind) {
   add(new THREE.SphereGeometry(0.035, 10, 8), M.gold, 0, 0.69, 0, mitre);
   for (const s of [-1, 1]) add(new THREE.BoxGeometry(0.06, 0.38, 0.01), M.red, s * 0.08, -0.1, -0.12, mitre);
 
-  return { root, body, head, armL, armR, shoeL, shoeR, mitre, props: { cross, lighter, bell, tray, thur, vimpa } };
+  // Missal aberto, segurado com as duas mãos para o padre ler
+  const missal = new THREE.Group(); missal.position.set(0, 1.2, 0.55); missal.rotation.x = 1.0; body.add(missal);
+  for (const s of [-1, 1]) {
+    add(new THREE.BoxGeometry(0.3, 0.02, 0.4), M.red, s * 0.15, 0, 0, missal).rotation.z = -s * 0.18;
+    add(new THREE.BoxGeometry(0.27, 0.03, 0.37), M.white, s * 0.14, 0.02, 0, missal).rotation.z = -s * 0.18;
+  }
+  add(new THREE.BoxGeometry(0.03, 0.005, 0.3), M.gold, 0.06, 0.045, 0.1, missal);
+
+  // Lavabo: bacia numa mão e jarra na outra
+  const silver = mat(0xd9dde3, { metalness: 0.6, roughness: 0.3 });
+  const lavabo = new THREE.Group(); body.add(lavabo);
+  add(new THREE.CylinderGeometry(0.26, 0.16, 0.08, 24), silver, -0.05, 0.92, 0.55, lavabo);
+  const jug = new THREE.Group(); jug.position.set(0.25, 1.2, 0.5); lavabo.add(jug);
+  add(new THREE.CylinderGeometry(0.07, 0.1, 0.26, 16), silver, 0, 0, 0, jug);
+  add(new THREE.ConeGeometry(0.035, 0.12, 8), silver, -0.1, 0.09, 0, jug).rotation.z = Math.PI / 2 + 0.4;
+  const stream = add(new THREE.CylinderGeometry(0.018, 0.028, 0.22, 8), M.water, 0.07, 1.04, 0.52, lavabo);
+  stream.visible = false; stream.castShadow = false;
+  lavabo.userData = { jug, stream };
+
+  if (albOnly) root.scale.setScalar(1.12);
+  return { root, body, head, armL, armR, shoeL, shoeR, mitre, props: { cross, lighter, bell, tray, thur, vimpa, missal, lavabo } };
 }
-const kids = { miguel: makeKid('miguel'), clarinha: makeKid('clarinha') };
-scene.add(kids.miguel.root, kids.clarinha.root);
+const kids = {};
+for (const k of Object.keys(HEROES)) { kids[k] = makeKid(k); scene.add(kids[k].root); }
 let hero = kids[heroKey];
 function setHero(k) {
   heroKey = k; N = HEROES[k]; hero = kids[k]; store.set('hero', k);
@@ -702,6 +785,8 @@ function setProp(name) {
   for (const k in hero.props) hero.props[k].visible = k === name;
   hero.armL.visible = hero.armR.visible = name !== 'vimpa';
 }
+// no menu e nas telas de resultado: coroinha de vimpa, acólito de mãos livres para acenar
+const restProp = () => setProp(N.grupo === 'acolito' ? 'none' : 'vimpa');
 
 /* ---------- Obstáculos da procissão ---------- */
 const OB = (() => {
@@ -798,6 +883,37 @@ function puff(x, y, z, size = 0.4, life = 1.1) {
   const s = sprite(SMOKE, size, false); s.position.set(x, y, z); scene.add(s); smokes.push({ s, life, max: life, size });
 }
 
+/* ---------- Objetos do altar (missão do ofertório) ---------- */
+const ALTAR_ARTIGO = { corporal: 'o corporal', sanguinho: 'o sanguinho', calice: 'o cálice', patena: 'a patena', missal: 'o missal' };
+const ALTAR_KEYS = Object.keys(ALTAR_ARTIGO);
+const ALTAR_NOTES = { corporal: 523, sanguinho: 587, calice: 659, patena: 784, missal: 880 };
+const altarSet = new THREE.Group(); altarSet.position.set(0, 1.4, -8.8); altarSet.visible = false; scene.add(altarSet);
+const altarObj = {};
+{
+  const g = (key, x) => { const o = new THREE.Group(); o.position.x = x; altarSet.add(o); altarObj[key] = o; return o; };
+  const linen = mat(0xffffff, { roughness: 0.5 });
+  const cor = g('corporal', -0.95);
+  add(new THREE.BoxGeometry(0.5, 0.012, 0.42), linen, 0, 0.006, 0, cor);
+  add(new THREE.BoxGeometry(0.06, 0.014, 0.018), M.red, 0, 0.008, 0.15, cor); add(new THREE.BoxGeometry(0.018, 0.014, 0.06), M.red, 0, 0.008, 0.15, cor);
+  const san = g('sanguinho', -0.4);
+  add(new THREE.BoxGeometry(0.12, 0.03, 0.28), linen, 0, 0.015, 0, san);
+  add(new THREE.BoxGeometry(0.05, 0.032, 0.014), M.red, 0, 0.016, 0, san);
+  const cal = g('calice', 0.08);
+  add(new THREE.CylinderGeometry(0.1, 0.12, 0.03, 18), M.gold, 0, 0.015, 0, cal);
+  add(new THREE.CylinderGeometry(0.025, 0.025, 0.2, 10), M.gold, 0, 0.13, 0, cal);
+  add(new THREE.SphereGeometry(0.045, 12, 8), M.gold, 0, 0.13, 0, cal);
+  add(new THREE.CylinderGeometry(0.11, 0.05, 0.16, 18), M.gold, 0, 0.31, 0, cal);
+  const pat = g('patena', 0.55);
+  add(new THREE.CylinderGeometry(0.15, 0.12, 0.018, 24), M.gold, 0, 0.009, 0, pat);
+  add(new THREE.CylinderGeometry(0.085, 0.085, 0.01, 20), M.wax, 0, 0.024, 0, pat);
+  const mis = g('missal', 1.15);
+  add(new THREE.BoxGeometry(0.34, 0.05, 0.28), M.woodDark, 0, 0.06, 0, mis).rotation.x = -0.45;
+  for (const s of [-1, 1]) {
+    const c = add(new THREE.BoxGeometry(0.17, 0.02, 0.3), M.red, s * 0.085, 0.11, 0, mis); c.rotation.set(-0.45, 0, s * 0.12);
+    const p = add(new THREE.BoxGeometry(0.15, 0.025, 0.27), M.white, s * 0.08, 0.125, 0, mis); p.rotation.set(-0.45, 0, s * 0.12);
+  }
+}
+
 /* ---------- Desafios ---------- */
 const PHASES = [
   { key: 'proc', title: 'A procissão de entrada',
@@ -818,13 +934,26 @@ const PHASES = [
   { key: 'vimpa', title: 'A vimpa do bispo',
     text: () => `Hoje o bispo veio, e ${N.o} ${N.nome} foi escolhid${N.x} para levar a mitra na vimpa durante a procissão de saída. Não deixe ela cair!`,
     how: 'A mitra está caindo para a direita? Toque na esquerda. Caindo para a esquerda? Toque na direita.' },
+  { key: 'missal', title: 'O missal da coleta',
+    text: () => `${N.O} ${N.nome} segura o missal aberto para o padre rezar a oração do dia. Só que o padre não para quieto: ajeita os óculos, se inclina, procura a linha...`,
+    how: 'Segure o lado esquerdo ou direito da tela para mover o missal. Mantenha o marcador na faixa dourada, onde o padre está lendo.' },
+  { key: 'altar', title: 'O altar do ofertório',
+    text: () => 'Hora de preparar o altar. O padre mostra a ordem dos objetos: corporal, sanguinho, cálice, patena e missal. Memorize e leve tudo na mesma ordem.',
+    how: 'Olhe os botões que acendem e depois toque neles na mesma ordem.' },
+  { key: 'lavabo', title: 'O lavabo',
+    text: () => 'O padre vai lavar as mãos. Derrame a água da jarra na medida certa: nem um pinguinho, nem uma enchente na casula.',
+    how: 'Segure o dedo na tela para derramar a água e solte quando o marcador estiver na faixa dourada.' },
 ];
+// A missa de cada grupo, na ordem em que as coisas acontecem
+const MISSAS = { coroinha: ['proc', 'velas', 'incenso', 'galhetas', 'sino', 'vimpa'], acolito: ['missal', 'altar', 'incenso', 'lavabo', 'sino'] };
+const missaList = () => MISSAS[N.grupo].map(k => PHASES.findIndex(p => p.key === k));
 const S = { mode: 'menu', phase: 0, score: 0, ps: 0, t: 0, run: { full: true, list: [0], pos: 0 } };
 const P = {}; // estado da fase atual
 const obstacles = [];
 const LANES = [-1.25, 0, 1.25];
 let phaseStartScore = 0;
 
+const ROUND_LABEL = { sino: 'Toque', galhetas: 'Pedido', altar: 'Rodada', lavabo: 'Jarra' };
 function hud() {
   const k = PHASES[S.phase].key;
   $('#hud-score').textContent = Math.floor(S.ps);
@@ -832,8 +961,8 @@ function hud() {
   $('#hud-phase').textContent = PHASES[S.phase].title.replace(/^(A|As|O) /, '');
   $('#hud-lives').textContent = (k === 'proc' || k === 'vimpa') ? '♥'.repeat(Math.max(0, P.lives)) + '♡'.repeat(Math.max(0, 3 - P.lives)) : '';
   const tm = $('#hud-time');
-  if (k === 'sino' || k === 'galhetas') {
-    $('#hud-time-label').textContent = k === 'sino' ? 'Toque' : 'Pedido';
+  if (ROUND_LABEL[k]) {
+    $('#hud-time-label').textContent = ROUND_LABEL[k];
     tm.textContent = `${Math.min(P.round + 1, P.rounds)}/${P.rounds}`; tm.classList.remove('warn');
   } else {
     const s = Math.max(0, Math.ceil(P.time));
@@ -854,6 +983,9 @@ const COACH = {
   galhetas: { who: 'monica', tips: () => ['Leia o balão do padre antes de tocar.', 'Água é a galheta azulzinha. Vinho é a vermelha.', 'A toalha é para o lavabo, quando o padre lava as mãos.', 'Quanto mais rápido entregar, mais pontos!'] },
   sino: { who: 'flavio', tips: () => ['A faixa dourada muda de lugar a cada toque.', 'O meio da faixa vale o dobro de pontos.', 'Na missa, o sino toca quando o padre eleva a hóstia e o cálice.', 'Respira e toca. Sino apressado vira susto!'] },
   vimpa: { who: 'monica', tips: () => ['Toques pequenos funcionam melhor que muitos toques seguidos.', 'O marcador da barrinha tem que ficar no dourado.', 'Quando o bispo espirrar, corrija rápido para o outro lado!', 'Passo a passo: procissão não é corrida.'] },
+  missal: { who: 'flavio', tips: () => ['Olhe para a cabeça do padre: o missal vai para onde ele vai.', 'Movimentos curtinhos! Missal não é volante.', 'No meio da faixa dourada vale mais ponto.', 'Missal firme e na altura dos olhos do padre.'] },
+  altar: { who: 'monica', tips: () => ['Repita baixinho o nome de cada objeto enquanto ele acende.', 'Cada objeto tem um som diferente. Use o ouvido para lembrar!', 'Errou? Calma, a próxima rodada começa do zero.', 'O sanguinho é o paninho que limpa o cálice.'] },
+  lavabo: { who: 'flavio', tips: () => ['Solte o dedo assim que o marcador entrar no dourado.', 'A faixa muda de lugar a cada jarra.', 'Cada jarra derrama mais rápido que a anterior.', 'No lavabo o padre reza baixinho pedindo para ser purificado.'] },
 };
 const coachState = { on: false, i: 0, t: 0 };
 function coachSay(i) {
@@ -889,32 +1021,100 @@ const QUIZ = [
   { q: 'O que é o cíngulo?', a: ['Um cordão amarrado na cintura, sobre a alva', 'Um tipo de vela', 'O sino pequeno'], e: 'O cíngulo prende a alva na cintura.' },
   { q: 'Onde são feitas as leituras da missa?', a: ['No ambão', 'No sacrário', 'Na credência'], e: 'O ambão é a mesa da Palavra.' },
   { q: 'O que é a credência?', a: ['A mesinha onde ficam as galhetas e os objetos da missa', 'A cadeira do padre', 'O livro de cantos'], e: 'É de lá que o coroinha leva as galhetas ao altar.' },
+  { q: 'Quem segura o missal aberto para o padre rezar na cadeira?', a: ['O acólito', 'O leitor', 'O comentarista'], e: 'Quando o padre reza longe do altar, o acólito segura o missal na altura certa.' },
+  { q: 'O que é o sanguinho (ou purificatório)?', a: ['O paninho usado para limpar o cálice', 'Uma vela vermelha', 'A fita do missal'], e: 'Ele fica dobrado ao lado do cálice, no altar.' },
+  { q: 'O que é a pala?', a: ['O cartão quadrado coberto de pano que tampa o cálice', 'A capa de chuva do padre', 'O banquinho do coroinha'], e: 'A pala protege o cálice para não cair nada dentro.' },
+  { q: 'O que é a âmbula (ou cibório)?', a: ['O vaso com tampa onde ficam as hóstias da comunhão', 'A jarra do lavabo', 'O suporte do missal'], e: 'As hóstias consagradas que sobram são guardadas na âmbula, dentro do sacrário.' },
+  { q: 'Por que o padre lava as mãos no lavabo?', a: ['Como sinal de que pede a Deus para ser purificado', 'Porque pegou no turíbulo', 'Para limpar o altar'], e: 'Enquanto a água escorre, ele reza baixinho pedindo perdão.' },
+  { q: 'Como se chama a veste branca que coroinhas e acólitos usam por cima da batina?', a: ['Sobrepeliz', 'Casula', 'Estola'], e: 'A sobrepeliz é branca e vai por cima da batina, que pode ser vermelha ou preta.' },
+  { q: 'Qual é a veste branca e comprida que o padre usa por baixo da casula?', a: ['Alva', 'Sobrepeliz', 'Capa'], e: 'Alva quer dizer "branca". O cíngulo prende a alva na cintura.' },
+  { q: 'Qual veste o padre usa por cima de todas as outras na missa?', a: ['Casula', 'Alva', 'Sobrepeliz'], e: 'A casula tem a cor do tempo litúrgico.' },
+  { q: 'Que faixa no pescoço é sinal do padre e do diácono?', a: ['Estola', 'Cíngulo', 'Vimpa'], e: 'O padre usa a estola caindo na frente. O diácono usa atravessada, do ombro até a cintura.' },
+  { q: 'Qual é a cor litúrgica do Natal e da Páscoa?', a: ['Branco', 'Roxo', 'Verde'], e: 'O branco é cor de festa e de alegria.' },
+  { q: 'Em que domingos o padre pode usar a cor rosa?', a: ['No 3º domingo do Advento e no 4º da Quaresma', 'Em todos os domingos de maio', 'No Dia das Crianças'], e: 'São os domingos Gaudete e Laetare, que lembram a alegria no meio da preparação.' },
+  { q: 'Com qual tempo começa o ano litúrgico?', a: ['Advento', 'Quaresma', 'Tempo Comum'], e: 'O ano da Igreja começa quatro domingos antes do Natal.' },
+  { q: 'Qual é o tempo de 40 dias de preparação para a Páscoa?', a: ['Quaresma', 'Advento', 'Tempo Pascal'], e: 'A Quaresma começa na Quarta-feira de Cinzas.' },
+  { q: 'O que é o círio pascal?', a: ['A vela grande acesa na Vigília Pascal, sinal de Cristo ressuscitado', 'A vela do aniversário do padre', 'Uma lanterna da sacristia'], e: 'Ele fica aceso no tempo pascal e nos batizados.' },
+  { q: 'Como se chamam o baldinho de água benta e o objeto que espalha a água?', a: ['Caldeirinha e aspersório', 'Naveta e turíbulo', 'Galheta e manustérgio'], e: 'O aspersório é usado nas bênçãos e na aspersão do povo.' },
+  { q: 'Onde o coroinha se veste e prepara as coisas da missa?', a: ['Na sacristia', 'No presbitério', 'No batistério'], e: 'Na sacristia ficam guardadas as vestes e os objetos litúrgicos.' },
+  { q: 'Como se chama a parte da igreja onde fica o altar?', a: ['Presbitério', 'Nave', 'Coro'], e: 'A nave é a parte onde fica o povo.' },
+  { q: 'O que vai dentro do turíbulo para fazer a fumaça?', a: ['Brasas e incenso', 'Algodão e álcool', 'Folhas secas'], e: 'A fumaça subindo lembra nossas orações subindo até Deus.' },
+  { q: 'Quando o padre pode incensar as oferendas?', a: ['No ofertório, depois de preparar o pão e o vinho', 'Na saída da missa', 'Durante os avisos'], e: 'Depois ele também pode incensar a cruz, o altar e o povo.' },
+  { q: 'O que o coroinha faz ao passar diante do altar?', a: ['Uma inclinação, abaixando a cabeça e os ombros', 'Bate palmas', 'Dá uma voltinha'], e: 'Diante do altar se faz inclinação. Diante do Santíssimo no sacrário, genuflexão.' },
+  { q: 'Quais são as leituras da missa de domingo?', a: ['Primeira leitura, salmo, segunda leitura e Evangelho', 'Só o Evangelho', 'Cinco leituras do Antigo Testamento'], e: 'Por isso o domingo tem uma mesa da Palavra bem farta.' },
+  { q: 'Quem proclama o Evangelho na missa?', a: ['O diácono ou o padre', 'O coroinha', 'Quem chegar primeiro'], e: 'E todos ficam de pé para ouvir as palavras de Jesus.' },
+  { q: 'Por que os coroinhas levam velas ao lado do Evangelho?', a: ['Para honrar a Palavra de Cristo, que é a luz do mundo', 'Para enxergar melhor as letras', 'Para esquentar o ambão'], e: 'Os ceroferários acompanham o Evangeliário com as velas acesas.' },
+  { q: 'O que é o Evangeliário?', a: ['O livro dos Evangelhos, levado na procissão de entrada', 'O livro de cantos', 'O caderno dos avisos'], e: 'Ele fica sobre o altar até a hora do Evangelho.' },
+  { q: 'Quem é o padroeiro da nossa paróquia?', a: ['São José Operário', 'São Pedro', 'Santo Antônio'], e: 'São José Operário é celebrado no dia 1º de maio, Dia do Trabalho.' },
+  { q: 'Quem é o padroeiro dos coroinhas?', a: ['São Tarcísio', 'São Jorge', 'São Cristóvão'], e: 'Tarcísio era um menino que deu a vida para proteger a Eucaristia.' },
+  { q: 'O que quer dizer "Amém"?', a: ['Assim é, eu creio', 'Até logo', 'Pode sentar'], e: 'É a resposta de fé de todo o povo.' },
+  { q: 'O que respondemos quando o ministro diz "O Corpo de Cristo"?', a: ['Amém', 'Obrigado', 'Igualmente'], e: 'O "Amém" quer dizer: eu creio que é Jesus.' },
+  { q: 'Quanto tempo de jejum é pedido antes de comungar?', a: ['Uma hora', 'Um dia inteiro', 'Cinco minutos'], e: 'É o jejum eucarístico. Água e remédio não quebram o jejum.' },
+  { q: 'O que o acólito leva ao altar na preparação das oferendas?', a: ['O corporal, o sanguinho, o cálice e o missal', 'As flores e os enfeites', 'O microfone e a estante'], e: 'Depois o padre recebe o pão e o vinho trazidos pelo povo.' },
 ];
 let quizPool = [];
 function shuffle(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
-function showQuiz(result) {
-  S.mode = 'quiz'; resetWorld('menu'); setProp('vimpa');
+const QUIZ_ONLY_N = 10;
+let quizNext = null;
+// result: pontos da fase que acabou (ou null); next: o que fazer depois da resposta
+function showQuiz(result, next, nextLabel) {
+  S.mode = 'quiz'; resetWorld('menu'); restProp();
   hero.root.position.set(0, 0, 0); hero.root.rotation.y = 0;
   showScreen('quiz');
-  $('#quiz-result').textContent = result.points; $('#quiz-joke').textContent = result.joke;
+  $('#quiz-result').hidden = $('#quiz-joke').hidden = !result;
+  if (result) { $('#quiz-result').textContent = result.points; $('#quiz-joke').textContent = result.joke; }
+  $('#quiz-eyebrow').textContent = (S.run.quizOnly ? `Pergunta ${S.run.n} de ${QUIZ_ONLY_N}` : 'Quiz do altar') + ' · rápido vale mais';
+  $('#btn-quiz-next').textContent = nextLabel || 'Próximo desafio';
+  quizNext = next;
   if (!quizPool.length) quizPool = shuffle(QUIZ.slice());
   const item = quizPool.pop();
   $('#quiz-q').textContent = item.q;
   const opts = $('#quiz-opts'); opts.textContent = '';
   $('#quiz-fb').hidden = true; $('#btn-quiz-next').hidden = true;
+  S.lastQuiz = 0;
+  // resposta certa vale de 10 a 30 pontos: quanto mais rápida, mais pontos
+  function answer(o, b) {
+    if (quizClock.done) return;
+    quizClock.done = true;
+    const secs = (performance.now() - quizClock.t0) / 1000;
+    for (const x of buttons) { x.disabled = true; if (x.dataset.right) x.classList.add('right'); }
+    const fb = $('#quiz-fb');
+    if (o && o.right) {
+      const pts = 10 + Math.round(20 * Math.max(0, 1 - secs / QUIZ_TIME));
+      S.score += pts; S.lastQuiz = pts; if (S.run.quizOnly) S.run.right++; sfx.coin();
+      fb.textContent = `Acertou em ${secs.toFixed(1).replace('.', ',')} s! +${pts} pontos. ${item.e}`; fb.style.color = '#8fe3a8';
+    } else {
+      if (b) b.classList.add('wrong'); sfx.miss();
+      fb.textContent = `${o ? 'Quase!' : 'O tempo acabou!'} ${item.e}`; fb.style.color = '#ffb3b3';
+    }
+    fb.hidden = false; $('#btn-quiz-next').hidden = false; $('#btn-quiz-next').focus({ preventScroll: true });
+  }
   const buttons = shuffle(item.a.map((text, i) => ({ text, right: i === 0 }))).map(o => {
     const b = document.createElement('button'); b.type = 'button'; b.textContent = o.text; b.dataset.right = o.right ? '1' : '';
-    b.addEventListener('click', () => {
-      for (const x of buttons) { x.disabled = true; if (x.dataset.right) x.classList.add('right'); }
-      const fb = $('#quiz-fb');
-      if (o.right) { S.score += 20; sfx.coin(); fb.textContent = `Acertou! +20 pontos. ${item.e}`; fb.style.color = '#8fe3a8'; }
-      else { b.classList.add('wrong'); sfx.miss(); fb.textContent = `Quase! ${item.e}`; fb.style.color = '#ffb3b3'; }
-      fb.hidden = false; $('#btn-quiz-next').hidden = false; $('#btn-quiz-next').focus({ preventScroll: true });
-    });
+    b.addEventListener('click', () => answer(o, b));
     opts.append(b); return b;
   });
+  Object.assign(quizClock, { t0: performance.now(), done: false, timeout: () => answer(null, null) });
 }
-$('#btn-quiz-next').addEventListener('click', () => showIntro(S.run.pos + 1));
+const QUIZ_TIME = 15;
+const quizClock = { t0: 0, done: true, timeout: null };
+function tickQuiz() {
+  if (S.mode !== 'quiz' || quizClock.done) return;
+  const left = Math.max(0, QUIZ_TIME - (performance.now() - quizClock.t0) / 1000);
+  const bar = $('#quiz-bar'); bar.style.width = (left / QUIZ_TIME * 100) + '%'; bar.classList.toggle('low', left < 4);
+  $('#quiz-secs').textContent = Math.ceil(left) + 's';
+  if (left <= 0) quizClock.timeout();
+}
+$('#btn-quiz-next').addEventListener('click', () => { if (quizNext) quizNext(); });
+function startQuizOnly() {
+  S.score = 0; S.run = { full: false, list: [], pos: 0, quizOnly: true, n: 0, right: 0 };
+  askQuizOnly();
+}
+function askQuizOnly() {
+  S.run.n++;
+  const last = S.run.n >= QUIZ_ONLY_N;
+  showQuiz(null, last ? () => showEnd('', '') : askQuizOnly, last ? 'Ver resultado' : 'Próxima pergunta');
+}
 function toast(text, kind = '') {
   const el = $('#toast'); el.textContent = text; el.className = '';
   void el.offsetWidth; el.className = 'show ' + kind;
@@ -941,32 +1141,40 @@ function resetWorld(kind) {
     kd.armL.rotation.set(0, 0, -0.12); kd.armR.rotation.set(0, 0, 0.12);
     kd.props.thur.userData.swing.rotation.set(0, 0, 0);
     for (const c of ['agua', 'vinho', 'toalha']) kd.props.tray.userData[c].position.y = c === 'toalha' ? 0.04 : 0.015;
+    kd.props.lavabo.userData.jug.rotation.set(0, 0, 0); kd.props.lavabo.userData.stream.visible = false;
+    kd.props.missal.position.x = 0;
   }
   candleGroup.visible = kind === 'velas';
-  priest.g.visible = kind === 'sino' || kind === 'galhetas' || kind === 'incenso';
-  priest.g.position.set(kind === 'galhetas' ? 1.0 : 0, 0.3, -9.75);
-  priest.g.rotation.y = kind === 'galhetas' ? 0.6 : 0;
+  altarSet.visible = kind === 'altar';
+  for (const key in altarObj) altarObj[key].position.y = 0;
+  priest.g.visible = ['sino', 'galhetas', 'incenso', 'missal', 'altar', 'lavabo'].includes(kind);
+  const side = kind === 'galhetas' || kind === 'lavabo';
+  if (kind === 'missal') { priest.g.position.set(-0.7, 0, -5.8); priest.g.rotation.y = 0.6; }
+  else { priest.g.position.set(side ? 1.0 : 0, 0.3, -9.75); priest.g.rotation.y = side ? 0.6 : 0; }
   priest.head.rotation.set(0, 0, 0);
   for (const o of obstacles) scene.remove(o); obstacles.length = 0;
   $('#meter').classList.remove('edges'); $('#zone2').hidden = true;
-  $('#choices').hidden = true; bubble(null);
+  $('#choices').hidden = true; $('#altar-choices').hidden = true; bubble(null);
 }
 
 function showScreen(id) {
   for (const s of ['menu', 'practice', 'board', 'quiz', 'intro', 'end']) $('#' + s).hidden = s !== id;
-  if (id) { $('#hud').hidden = true; $('#meter').hidden = true; $('#choices').hidden = true; bubble(null); coachStop(); }
+  if (id) { $('#hud').hidden = true; $('#meter').hidden = true; $('#choices').hidden = true; $('#altar-choices').hidden = true; bubble(null); coachStop(); }
 }
 
 function refreshMenu() {
   $('#menu-name').textContent = N.nome;
-  $('#menu-text').textContent = `${N.O} ${N.nome} é ${N.o} coroinha mais animad${N.x} da paróquia. Ajude ${N.ele} a servir a missa sem passar vergonha na frente do padre.`;
+  $('#menu-role').textContent = N.grupo === 'acolito' ? 'do Altar' : 'Coroinha';
+  $('#menu-text').textContent = N.grupo === 'acolito'
+    ? `${N.O} ${N.nome} já serve no altar faz tempo e ganhou as missões d${N.o}s mais experientes: segurar o missal, preparar o altar, incensar e ajudar o padre no lavabo.`
+    : `${N.O} ${N.nome} é ${N.o} coroinha mais animad${N.x} da paróquia. Ajude ${N.ele} a servir a missa sem passar vergonha na frente do padre.`;
   for (const b of document.querySelectorAll('#seg-hero button')) b.setAttribute('aria-pressed', String(b.dataset.v === heroKey));
   for (const b of document.querySelectorAll('#seg-dif button')) b.setAttribute('aria-pressed', String(b.dataset.v === difKey));
   $('#player-name').placeholder = `Ex.: ${N.nome}`;
 }
 
 function goMenu() {
-  S.mode = 'menu'; resetWorld('menu'); setProp('vimpa');
+  S.mode = 'menu'; resetWorld('menu'); restProp();
   hero.root.position.set(0, 0, 0); hero.root.rotation.y = 0;
   refreshMenu(); showScreen('menu');
 }
@@ -1004,6 +1212,9 @@ function placeForPhase(k) {
   if (k === 'galhetas') { r.position.set(2.45, 0.3, -8.5); r.rotation.y = -0.95; setProp('tray'); }
   if (k === 'sino') { r.position.set(0, 0, -3.0); r.rotation.y = 0; setProp('bell'); }
   if (k === 'vimpa') { r.position.set(0, 0, 0); r.rotation.y = 0; setProp('vimpa'); hero.mitre.visible = true; }
+  if (k === 'missal') { r.position.set(0.55, 0, -4.95); r.rotation.y = -2.17; setProp('missal'); }
+  if (k === 'altar') { r.position.set(-2.3, 0.3, -8.0); r.rotation.y = 1.25; setProp('none'); }
+  if (k === 'lavabo') { r.position.set(2.45, 0.3, -8.5); r.rotation.y = -0.95; setProp('lavabo'); }
 }
 
 function startPhase() {
@@ -1040,6 +1251,20 @@ function startPhase() {
     $('#meter-label').textContent = 'Equilíbrio da mitra'; $('#meter').hidden = false;
     toast('Segura a mitra!', 'gold');
   }
+  if (k === 'missal') {
+    Object.assign(P, { time: 25, x: 0.5, hold: 0, zc: 0.5, zt: 0.5, zT: 1, acc: 0, good: 0, zw: Math.max(0.12, 0.24 / m) });
+    $('#meter-label').textContent = 'Onde o padre está lendo'; $('#meter').hidden = false;
+    toast('Missal firme!', 'gold');
+  }
+  if (k === 'altar') {
+    const lens = difKey === 'facil' ? [3, 3, 4, 4] : difKey === 'dificil' ? [4, 5, 6, 7] : [3, 4, 5, 6];
+    Object.assign(P, { round: 0, rounds: 4, lens, seq: [], stage: 'wait', wait: 0.8, showI: 0, showT: 0, lit: null, inI: 0, hits: 0, hop: null, hopT: 0 });
+    $('#altar-choices').hidden = false; altarLit(null); setAltarButtons(false);
+  }
+  if (k === 'lavabo') {
+    Object.assign(P, { round: 0, rounds: 6, level: 0, stage: 'ready', wait: 0, hits: 0, perfects: 0, spill: 0 });
+    newPour(); $('#meter').hidden = false;
+  }
   if (!S.run.full) coachStart();
   hud();
 }
@@ -1073,21 +1298,76 @@ function endPhase() {
       : P.lives > 0 ? `A mitra caiu, mas ${N.o} ${N.nome} pegou de volta tão rápido que quase ninguém viu.`
       : 'A mitra foi parar no chão algumas vezes. O bispo riu e deu a bênção mesmo assim.';
   }
+  if (k === 'missal') {
+    joke = P.good > 18 ? 'O padre rezou a oração inteira sem perder uma linha.' : P.good > 11 ? 'O padre só precisou se esticar duas vezes.' : 'O padre acabou rezando de cor. Ainda bem que ele sabia!';
+  }
+  if (k === 'altar') {
+    joke = P.hits === P.rounds ? 'O altar ficou pronto antes de acabar o canto do ofertório.' : P.hits >= 2 ? 'Teve patena no lugar do cálice, mas no fim deu tudo certo.' : 'O sacristão precisou dar uma mãozinha.';
+  }
+  if (k === 'lavabo') {
+    joke = P.spill === 0 && P.hits >= 5 ? 'Mãos lavadas na medida. O padre agradeceu com um sorriso.'
+      : P.spill === 0 ? 'Faltou água aqui e ali, mas o padre ficou com as mãos limpinhas.'
+      : `A casula molhou ${P.spill > 1 ? 'algumas vezes' : 'uma vez'}. O padre disse que foi água benta.`;
+  }
   S.ps += bonus; S.score += Math.floor(S.ps); S.ps = 0;
   sfx.win();
-  const points = `+${S.score - phaseStartScore} pontos` + (bonus ? ` (bônus ${bonus})` : '');
-  if (S.run.pos < S.run.list.length - 1) { if (S.run.full) showQuiz({ points, joke }); else showIntro(S.run.pos + 1, { points, joke }); }
+  S.lastPts = S.score - phaseStartScore;
+  const points = `+${S.lastPts} pontos` + (bonus ? ` (bônus ${bonus})` : '');
+  const res = { points, joke };
+  if (S.run.pos < S.run.list.length - 1) { if (S.run.full) showQuiz(res, () => showIntro(S.run.pos + 1)); else showIntro(S.run.pos + 1, res); }
+  else if (!S.run.full) showQuiz(res, () => showEnd(joke, points), 'Ver resultado');
   else showEnd(joke, points);
 }
 
 /* ---------- Placar ---------- */
-let board = store.get('placar', []);
-if (!Array.isArray(board)) board = [];
-function renderBoard(el, list, meId) {
+// Endereço do placar geral (Apps Script da planilha). Vazio: o placar fica só neste aparelho.
+const PLACAR_URL = 'https://script.google.com/macros/s/AKfycbzEzBklSbXTE7nUE4MnmeRTg1ynfhLGPsxOFkxUGkzXN6eELEfkxMj8RXBiCqzpjMBu/exec';
+const BOARD_CATS = [
+  { id: 'missa-coroinha', label: 'Missa completa dos coroinhas' },
+  { id: 'missa-acolito', label: 'Missa completa dos acólitos' },
+  ...PHASES.map(p => ({ id: p.key, label: p.title })),
+  { id: 'quiz', label: 'Quiz do altar (10 perguntas)' },
+];
+const catLabel = id => (BOARD_CATS.find(c => c.id === id) || { label: id }).label;
+// placar deste aparelho: { categoria: [registros] }. O placar antigo (só missa completa) vira a categoria certa.
+let boards = store.get('placares', null);
+if (!boards || typeof boards !== 'object') {
+  boards = {};
+  const old = store.get('placar', []);
+  if (Array.isArray(old)) for (const e of old) {
+    const c = HEROES[e.hero] && HEROES[e.hero].grupo === 'acolito' ? 'missa-acolito' : 'missa-coroinha';
+    (boards[c] = boards[c] || []).push(e);
+  }
+  store.set('placares', boards);
+}
+let globalBoards = null, globalState = PLACAR_URL ? 'idle' : 'off';
+async function loadGlobal() {
+  if (!PLACAR_URL) return;
+  try {
+    const r = await fetch(PLACAR_URL + '?t=' + Date.now());
+    if (!r.ok) throw new Error(r.status);
+    globalBoards = await r.json(); globalState = 'ok';
+  } catch (e) { globalState = 'erro'; }
+}
+async function sendGlobal(entry) {
+  if (!PLACAR_URL) return false;
+  try {
+    // texto simples evita a checagem extra de CORS que o Apps Script não responde
+    const r = await fetch(PLACAR_URL, { method: 'POST', body: JSON.stringify({ cat: entry.cat, nome: entry.nome, pts: entry.pts, hero: entry.hero, dif: entry.dif }) });
+    const j = await r.json();
+    if (!j.ok) return false;
+    if (j.boards) { globalBoards = j.boards; globalState = 'ok'; }
+    return true;
+  } catch (e) { return false; }
+}
+const sameEntry = (a, b) => !!a && !!b && (a.id && b.id ? a.id === b.id : a.nome === b.nome && Number(a.pts) === Number(b.pts));
+function renderBoard(el, list, me) {
   el.textContent = '';
-  if (!list.length) { const li = document.createElement('li'); li.className = 'empty'; li.textContent = 'Ninguém jogou a missa completa ainda.'; el.append(li); return; }
+  if (!list.length) { const li = document.createElement('li'); li.className = 'empty'; li.textContent = 'Ninguém marcou pontos aqui ainda.'; el.append(li); return; }
+  let marked = false;
   list.forEach((e, i) => {
-    const li = document.createElement('li'); if (e.id === meId) li.className = 'me';
+    const li = document.createElement('li');
+    if (!marked && sameEntry(e, me)) { li.className = 'me'; marked = true; }
     const pos = document.createElement('span'); pos.className = 'pos'; pos.textContent = i + 1;
     const who = document.createElement('span'); who.className = 'who'; who.textContent = e.nome;
     const sm = document.createElement('small'); sm.textContent = `${HEROES[e.hero] ? HEROES[e.hero].nome : ''} · ${DIFS[e.dif] ? DIFS[e.dif].label : ''}`; who.append(sm);
@@ -1096,35 +1376,58 @@ function renderBoard(el, list, meId) {
   });
 }
 
-function endBoard(meId) {
-  renderBoard($('#end-board'), board.slice(0, 5), meId);
+// no fim da partida: placar geral quando disponível, senão o deste aparelho
+function endBoard(me) {
+  const cat = S.endCat, geral = globalState === 'ok' && globalBoards;
+  renderBoard($('#end-board'), ((geral ? globalBoards[cat] : boards[cat]) || []).slice(0, 5), me);
+  $('#end-board-title').textContent = `${geral ? 'Placar geral' : 'Placar deste aparelho'} · ${catLabel(cat)}`;
   $('#end-board-title').hidden = false; $('#end-board').hidden = false;
+}
+function addLocal(entry) {
+  const list = boards[entry.cat] = boards[entry.cat] || [];
+  list.push(entry); list.sort((a, b) => b.pts - a.pts); list.splice(10);
+  store.set('placares', boards);
+  return list.findIndex(e => e.id === entry.id);
 }
 function showEndActions() {
   $('#save-form').hidden = true; $('#end-actions').hidden = false;
   setTimeout(() => $('#btn-menu').focus({ preventScroll: true }), 50);
 }
 function showEnd(lastJoke, lastPoints) {
-  S.mode = 'end'; resetWorld('menu'); setProp('vimpa');
+  S.mode = 'end'; resetWorld('menu'); restProp();
   hero.root.position.set(0, 0, 0); hero.root.rotation.y = 0;
   showScreen('end');
-  const sc = S.score, full = S.run.full;
-  $('#end-board-title').hidden = true; $('#end-board').hidden = true;
-  $('#end-actions').hidden = full;
-  $('#end-eyebrow').textContent = full ? `Fim da missa · ${DIFS[difKey].label}` : `Treino: ${PHASES[S.phase].title}`;
+  const full = S.run.full;
+  // o que vai para o placar: missa inteira, um desafio do treino (sem o quiz) ou o quiz de 10 perguntas
+  S.endCat = S.run.quizOnly ? 'quiz' : full ? 'missa-' + N.grupo : PHASES[S.phase].key;
+  S.endPts = S.run.quizOnly || full ? S.score : S.lastPts;
+  const sc = S.endPts;
+  $('#end-actions').hidden = true;
   $('#end-score').textContent = sc;
+  $('#save-form').hidden = false;
+  $('#player-name').value = store.get('nome', '');
+  endBoard(null);
+  if (PLACAR_URL) loadGlobal().then(() => { if (S.mode === 'end' && !$('#save-form').hidden) endBoard(null); });
+  if (S.run.quizOnly) {
+    const r = S.run.right;
+    $('#end-eyebrow').textContent = 'Treino: Quiz do altar';
+    $('#end-rank').textContent = `${r} de ${QUIZ_ONLY_N} acertos`;
+    $('#end-line').textContent = r >= 9 ? 'Sabe mais que o sacristão!' : r >= 6 ? 'Muito bem! Mais um pouco e vira professor de coroinha.' : 'Cada missa servida ensina um pouco mais. Bora de novo?';
+    return;
+  }
+  $('#end-eyebrow').textContent = full ? `Fim da missa · ${DIFS[difKey].label}` : `Treino: ${PHASES[S.phase].title}`;
   if (full) {
-    const rank = sc < 700 ? 'Coroinha em treinamento' : sc < 1100 ? `Coroinha caprichos${N.x}` : sc < 1500 ? 'Coroinha de ouro' : 'Coroinha lendário';
-    const line = sc < 700 ? 'Faz parte. Até o coroinha mais experiente já tropeçou na batina.'
-      : sc < 1100 ? `Missa bem servida. ${N.O} ${N.nome} ganhou um pedaço de bolo depois.`
-      : sc < 1500 ? `O padre já quer ${N.o} ${N.nome} em todas as missas do mês.`
+    // a missa dos acólitos tem menos desafios, então a régua acompanha
+    const f = S.run.list.length / 6, papel = N.grupo === 'acolito' ? N.nome : 'Coroinha';
+    const rank = sc < 700 * f ? `${papel} em treinamento` : sc < 1100 * f ? `${papel} caprichos${N.x}` : sc < 1500 * f ? `${papel} de ouro` : `${papel} lendári${N.x}`;
+    const line = sc < 700 * f ? 'Faz parte. Até quem serve há anos já tropeçou na batina.'
+      : sc < 1100 * f ? `Missa bem servida. ${N.O} ${N.nome} ganhou um pedaço de bolo depois.`
+      : sc < 1500 * f ? `O padre já quer ${N.o} ${N.nome} em todas as missas do mês.`
       : 'Dizem que até o pombo ficou para a bênção final.';
     $('#end-rank').textContent = rank; $('#end-line').textContent = `${lastJoke} ${line}`;
-    $('#save-form').hidden = false; endBoard(null);
-    $('#player-name').value = store.get('nome', '');
   } else {
-    $('#end-rank').textContent = 'Treino concluído'; $('#end-line').textContent = `${lastPoints}. ${lastJoke}`;
-    $('#save-form').hidden = true;
+    $('#end-rank').textContent = 'Treino concluído';
+    $('#end-line').textContent = `${lastJoke}${S.lastQuiz ? ` No quiz você ganhou mais ${S.lastQuiz} pontos, que não entram no placar do desafio.` : ''}`;
   }
 }
 $('#btn-skip').addEventListener('click', showEndActions);
@@ -1132,13 +1435,53 @@ $('#save-form').addEventListener('submit', e => {
   e.preventDefault();
   const nome = ($('#player-name').value.trim() || N.nome).slice(0, 16);
   store.set('nome', nome);
-  const entry = { id: Date.now(), nome, pts: S.score, hero: heroKey, dif: difKey };
-  board.push(entry); board.sort((a, b) => b.pts - a.pts); board = board.slice(0, 10); store.set('placar', board);
+  const entry = { id: Date.now(), nome, pts: S.endPts, hero: heroKey, dif: difKey, cat: S.endCat };
+  const place = addLocal(entry);
   $('#player-name').blur();
-  endBoard(entry.id); showEndActions();
-  const place = board.findIndex(b => b.id === entry.id);
-  toast(place === 0 ? 'Novo recorde da família!' : place >= 0 ? `${place + 1}º lugar no placar!` : 'Salvo!', 'gold');
+  showEndActions();
+  if (!PLACAR_URL) {
+    endBoard(entry);
+    toast(place === 0 ? 'Novo recorde deste aparelho!' : place >= 0 ? `${place + 1}º lugar no placar!` : 'Salvo!', 'gold');
+    return;
+  }
+  $('#end-board-title').textContent = 'Enviando para o placar geral...';
+  sendGlobal(entry).then(ok => {
+    endBoard(entry);
+    if (!ok) { toast('Sem internet: salvo só neste aparelho.', 'bad'); return; }
+    const g = (globalBoards && globalBoards[entry.cat]) || [];
+    const gp = g.findIndex(x => sameEntry(x, entry));
+    toast(gp === 0 ? 'Novo recorde geral!' : gp >= 0 ? `${gp + 1}º lugar no placar geral!` : 'Enviado para o placar geral!', 'gold');
+  });
 });
+
+/* tela do placar: escolhe o desafio e, se houver placar geral, entre geral e este aparelho */
+let boardScope = 'geral';
+{
+  const sel = $('#board-cat');
+  for (const c of BOARD_CATS) { const o = document.createElement('option'); o.value = c.id; o.textContent = c.label; sel.append(o); }
+  sel.addEventListener('change', showBoardList);
+  document.querySelectorAll('#seg-scope button').forEach(b => b.addEventListener('click', () => {
+    boardScope = b.dataset.v;
+    document.querySelectorAll('#seg-scope button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    showBoardList();
+  }));
+}
+function showBoardList() {
+  const cat = $('#board-cat').value, note = $('#board-note');
+  const geral = PLACAR_URL && boardScope === 'geral';
+  if (geral && globalState === 'ok') { renderBoard($('#board-list'), (globalBoards[cat] || []).slice(0, 10)); note.textContent = 'Placar geral: todo mundo que joga pelo link do jogo.'; return; }
+  renderBoard($('#board-list'), (boards[cat] || []).slice(0, 10));
+  note.textContent = !geral ? 'Este placar fica guardado neste aparelho.'
+    : globalState === 'erro' ? 'Não consegui abrir o placar geral (sem internet?). Mostrando o deste aparelho.'
+    : 'Carregando o placar geral...';
+}
+function openBoard() {
+  S.mode = 'board';
+  $('#board-cat').value = 'missa-' + N.grupo;
+  $('#seg-scope').hidden = !PLACAR_URL;
+  showBoardList(); showScreen('board');
+  if (PLACAR_URL) loadGlobal().then(() => { if (S.mode === 'board') showBoardList(); });
+}
 
 /* ---------- Sino ---------- */
 function newBellRound() {
@@ -1217,6 +1560,51 @@ function choose(c) {
 }
 for (const b of document.querySelectorAll('#choices button')) b.addEventListener('click', () => choose(b.dataset.c));
 
+/* ---------- Altar do ofertório (memória) ---------- */
+function altarLit(key) { for (const b of document.querySelectorAll('#altar-choices button')) b.classList.toggle('lit', b.dataset.a === key); }
+function setAltarButtons(on) { for (const b of document.querySelectorAll('#altar-choices button')) b.disabled = !on; }
+function altarNote(key) { tone(ALTAR_NOTES[key], 0.3, { type: 'triangle', vol: 0.11 }); P.hop = key; P.hopT = 0.6; }
+function newAltarRound() {
+  P.seq = [];
+  for (let i = 0; i < P.lens[P.round]; i++) { let c; do { c = pick(ALTAR_KEYS); } while (c === P.seq[i - 1]); P.seq.push(c); }
+  P.stage = 'show'; P.showI = 0; P.showT = 0.6; P.lit = null; P.inI = 0;
+  bubble('Preste atenção na ordem!'); hud();
+}
+function pickAltar(key) {
+  if (S.mode !== 'play' || PHASES[S.phase].key !== 'altar' || P.stage !== 'input') return;
+  ac(); altarNote(key);
+  if (key === P.seq[P.inI]) {
+    S.ps += 10; P.inI++;
+    if (P.inI >= P.seq.length) { S.ps += 20; P.hits++; sfx.coin(); toast(pick(['Altar pronto!', 'Tudo no lugar!', 'Memória de acólito!']), 'gold'); endAltarRound(); }
+  } else {
+    sfx.miss(); toast(`O padre pediu ${ALTAR_ARTIGO[P.seq[P.inI]]}!`, 'bad'); endAltarRound();
+  }
+  hud();
+}
+function endAltarRound() { P.stage = 'wait'; P.wait = 1.2; P.round++; setAltarButtons(false); altarLit(null); bubble(null); }
+for (const b of document.querySelectorAll('#altar-choices button')) b.addEventListener('click', () => pickAltar(b.dataset.a));
+
+/* ---------- Lavabo (segurar e soltar) ---------- */
+function newPour() {
+  const m = DM();
+  P.zw = Math.max(0.08, (0.2 - P.round * 0.015) / m);
+  P.zc = rand(0.45 + P.zw / 2, 0.9 - P.zw / 2);
+  P.spd = (0.35 + P.round * 0.07) * m;
+  P.level = 0; P.stage = 'ready';
+  const z = $('#zone'); z.style.left = ((P.zc - P.zw / 2) * 100) + '%'; z.style.width = (P.zw * 100) + '%';
+  $('#meter-label').textContent = `Jarra ${P.round + 1} de ${P.rounds}`;
+}
+function startPour() { if (P.stage === 'ready') P.stage = 'pour'; }
+function stopPour() {
+  if (P.stage !== 'pour') return;
+  const d = Math.abs(P.level - P.zc);
+  if (d < P.zw * 0.15) { S.ps += 30; P.perfects++; P.hits++; sfx.coin(); toast('Na medida!', 'gold'); }
+  else if (d < P.zw / 2) { S.ps += 18; P.hits++; sfx.chime(); toast('Boa!'); }
+  else if (P.level < P.zc) { S.ps += 3; sfx.miss(); toast(pick(['Só um pinguinho? O padre ficou esperando.', 'Faltou água!']), 'bad'); }
+  else { sfx.miss(); toast(pick(['Água demais!', 'Respingou no padre!']), 'bad'); }
+  P.stage = 'done'; P.wait = 1.0; hud();
+}
+
 /* ---------- Entrada ---------- */
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
 canvas.addEventListener('pointerdown', e => {
@@ -1233,6 +1621,22 @@ canvas.addEventListener('pointerdown', e => {
   if (k === 'incenso') swingThurible();
   if (k === 'sino') ringBell();
   if (k === 'vimpa') nudgeMitre(e.clientX < window.innerWidth / 2 ? -1 : 1);
+  if (k === 'missal') P.hold = e.clientX < window.innerWidth / 2 ? -1 : 1;
+  if (k === 'lavabo') startPour();
+});
+function releaseHold() {
+  if (S.mode !== 'play') return;
+  const k = PHASES[S.phase].key;
+  if (k === 'missal') P.hold = 0;
+  if (k === 'lavabo') stopPour();
+}
+window.addEventListener('pointerup', releaseHold);
+window.addEventListener('pointercancel', releaseHold);
+window.addEventListener('keyup', e => {
+  if (S.mode !== 'play') return;
+  const k = PHASES[S.phase].key;
+  if (k === 'missal' && /^(ArrowLeft|ArrowRight|a|d)$/.test(e.key)) P.hold = 0;
+  if (k === 'lavabo' && (e.key === ' ' || e.key === 'Enter')) stopPour();
 });
 function nudgeMitre(d) { if (P.fall > 0) return; P.vel += d * 0.9; }
 window.addEventListener('keydown', e => {
@@ -1245,6 +1649,10 @@ window.addEventListener('keydown', e => {
   if (k === 'galhetas' && /^[1-3]$/.test(e.key)) choose(['agua', 'vinho', 'toalha'][+e.key - 1]);
   if (k === 'vimpa' && (e.key === 'ArrowLeft' || e.key === 'a')) nudgeMitre(-1);
   if (k === 'vimpa' && (e.key === 'ArrowRight' || e.key === 'd')) nudgeMitre(1);
+  if (k === 'missal' && (e.key === 'ArrowLeft' || e.key === 'a')) P.hold = -1;
+  if (k === 'missal' && (e.key === 'ArrowRight' || e.key === 'd')) P.hold = 1;
+  if (k === 'lavabo' && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); if (!e.repeat) startPour(); }
+  if (k === 'altar' && /^[1-5]$/.test(e.key)) pickAltar(ALTAR_KEYS[+e.key - 1]);
 });
 function moveLane(d) { P.lane = Math.max(0, Math.min(2, P.lane + d)); }
 function lightCandle(c) {
@@ -1260,23 +1668,23 @@ document.querySelectorAll('#seg-hero button').forEach(b => b.addEventListener('c
 document.querySelectorAll('#seg-dif button').forEach(b => b.addEventListener('click', () => {
   difKey = b.dataset.v; store.set('dif', difKey); refreshMenu();
 }));
-{
-  const list = $('#pick-list');
-  PHASES.forEach((ph, i) => {
-    const b = document.createElement('button');
-    const n = document.createElement('b'); n.textContent = `Desafio ${i + 1}`;
-    b.append(n, ph.title.replace(/^(A|As|O) /, '').replace(/^./, c => c.toUpperCase()));
-    b.addEventListener('click', () => { ac(); startRun([i], false); });
-    list.append(b);
-  });
+// a lista de treino muda conforme o personagem: coroinha ou acólito
+function buildPickList() {
+  const list = $('#pick-list'); list.textContent = '';
+  const item = (label, text, fn) => {
+    const b = document.createElement('button'); const n = document.createElement('b'); n.textContent = label;
+    b.append(n, text); b.addEventListener('click', () => { ac(); fn(); }); list.append(b);
+  };
+  missaList().forEach((idx, i) => item(`Desafio ${i + 1}`, PHASES[idx].title.replace(/^(A|As|O) /, '').replace(/^./, c => c.toUpperCase()), () => startRun([idx], false)));
+  item('Quiz', `${QUIZ_ONLY_N} perguntas`, startQuizOnly);
 }
-$('#btn-start').addEventListener('click', () => { ac(); startRun(PHASES.map((_, i) => i), true); });
-$('#btn-practice').addEventListener('click', () => { S.mode = 'practice'; showScreen('practice'); });
-$('#btn-board').addEventListener('click', () => { S.mode = 'board'; renderBoard($('#board-list'), board); showScreen('board'); });
+$('#btn-start').addEventListener('click', () => { ac(); startRun(missaList(), true); });
+$('#btn-practice').addEventListener('click', () => { S.mode = 'practice'; buildPickList(); showScreen('practice'); });
+$('#btn-board').addEventListener('click', openBoard);
 $('#btn-back1').addEventListener('click', goMenu);
 $('#btn-back2').addEventListener('click', goMenu);
 $('#btn-go').addEventListener('click', () => { ac(); startPhase(); });
-$('#btn-again').addEventListener('click', () => { ac(); startRun(S.run.list, S.run.full); });
+$('#btn-again').addEventListener('click', () => { ac(); if (S.run.quizOnly) startQuizOnly(); else startRun(S.run.list, S.run.full); });
 $('#btn-menu').addEventListener('click', goMenu);
 
 /* ---------- Câmera ---------- */
@@ -1304,7 +1712,9 @@ const portrait = () => camera.aspect < 1;
 function camFor(k) {
   if (k === 'velas') { const d = Math.max(7, fitDist(2.7)); wantPos.set(0, 3.3, CANDLE_Z + d); wantLook.set(0, portrait() ? 1.0 : 1.6, CANDLE_Z); }
   else if (k === 'vimpa') { const d = Math.max(4.2, fitDist(1.5)); wantPos.set(0, 2.2, d); wantLook.set(0, portrait() ? 0.3 : 1.1, 0); }
-  else if (k === 'galhetas') { const d = Math.max(5, fitDist(2.3)); wantPos.set(1.5, 3.0, -8.9 + d); wantLook.set(1.5, portrait() ? 1.2 : 1.7, -8.9); }
+  else if (k === 'missal') { const d = Math.max(4.8, fitDist(1.9)); wantPos.set(-0.07 - 0.35 * d, 2.4, -5.37 + 0.94 * d); wantLook.set(-0.07, portrait() ? 0.9 : 1.4, -5.37); }
+  else if (k === 'altar') { const d = Math.max(5, fitDist(2.6)); wantPos.set(-0.5, 3.3, -8.8 + d); wantLook.set(-0.5, portrait() ? 1.2 : 1.7, -8.8); }
+  else if (k === 'galhetas' || k === 'lavabo') { const d = Math.max(5, fitDist(2.3)); wantPos.set(1.5, 3.0, -8.9 + d); wantLook.set(1.5, portrait() ? 1.2 : 1.7, -8.9); }
   else { const d = Math.max(4, fitDist(1.3)); wantPos.set(0, 2.3, -3 + d); wantLook.set(0, portrait() ? 0.8 : 1.2, -3); }
 }
 
@@ -1328,6 +1738,7 @@ function frame() {
   const mp = hero.root.position;
   priest.head.position.y = 2.32 + Math.sin(t * 1.8) * 0.01;
   if (coachState.on && S.mode === 'play' && (coachState.t -= dt) <= 0) { coachState.t = 7; coachSay(coachState.i + 1); }
+  tickQuiz();
 
   if (S.mode !== 'play' && (S.mode !== 'intro' || k === 'proc')) {
     idle(t);
@@ -1346,7 +1757,75 @@ function frame() {
     idle(t); hero.head.rotation.z = 0;
     if (k === 'galhetas') { hero.armL.rotation.set(-1.15, 0, 0.25); hero.armR.rotation.set(-1.15, 0, -0.25); }
     if (k === 'incenso') { hero.armR.rotation.set(-0.9, 0, -0.1); hero.props.thur.userData.swing.rotation.z = Math.sin(t * 2.5) * 0.4; }
+    if (k === 'missal') { hero.armL.rotation.set(-1.3, 0, 0.25); hero.armR.rotation.set(-1.3, 0, -0.25); }
+    if (k === 'lavabo') { hero.armL.rotation.set(-1.15, 0, 0.25); hero.armR.rotation.set(-1.3, 0, -0.25); }
     camFor(k);
+  }
+
+  if (S.mode === 'play' && k === 'missal') {
+    P.t += dt; P.time -= dt; P.zT -= dt;
+    if (P.zT <= 0) {
+      P.zT = rand(1.0, 2.2) / m; P.zt = rand(0.15, 0.85);
+      if (Math.random() < 0.2 * m) toast(pick(['O padre ajeitou os óculos!', 'Virou a página!', 'O padre procurou a linha...']));
+    }
+    P.zc += (P.zt - P.zc) * Math.min(1, dt * (0.9 + P.t * 0.04) * m);
+    P.x = Math.max(0, Math.min(1, P.x + P.hold * 0.85 * dt));
+    const d = Math.abs(P.x - P.zc);
+    if (d < P.zw / 2) P.good += dt;
+    P.acc += dt;
+    if (P.acc >= 0.2) { P.acc -= 0.2; S.ps += d < P.zw * 0.25 ? 3 : d < P.zw / 2 ? 2 : 0; }
+    const z = $('#zone'); z.style.left = ((P.zc - P.zw / 2) * 100) + '%'; z.style.width = (P.zw * 100) + '%';
+    $('#needle').style.left = (P.x * 100) + '%';
+    idle(t);
+    hero.armL.rotation.set(-1.3, 0, 0.25); hero.armR.rotation.set(-1.3, 0, -0.25);
+    hero.props.missal.position.x = -(P.x - 0.5) * 0.5;
+    priest.head.rotation.set(0.25, (P.zc - 0.5) * 0.9, d < P.zw / 2 ? 0 : Math.sin(t * 6) * 0.08);
+    camFor(k); hud();
+    if (P.time <= 0) endPhase();
+  }
+
+  if (S.mode === 'play' && k === 'altar') {
+    idle(t);
+    hero.armL.rotation.set(-0.5, 0, 0.2); hero.armR.rotation.set(-0.5, 0, -0.2);
+    if (P.stage === 'wait') {
+      P.wait -= dt;
+      if (P.wait <= 0) { if (P.round >= P.rounds) endPhase(); else newAltarRound(); }
+    } else if (P.stage === 'show') {
+      P.showT -= dt;
+      if (P.showT <= 0) {
+        if (P.lit) { altarLit(null); P.lit = null; P.showT = 0.18; P.showI++; }
+        else if (P.showI < P.seq.length) { P.lit = P.seq[P.showI]; altarLit(P.lit); altarNote(P.lit); P.showT = Math.max(0.4, 0.75 / m); }
+        else { P.stage = 'input'; setAltarButtons(true); bubble('Agora é com você!'); }
+      }
+    }
+    P.hopT = Math.max(0, P.hopT - dt);
+    for (const key in altarObj) altarObj[key].position.y = key === P.hop ? Math.sin(Math.min(1, P.hopT / 0.6) * Math.PI) * 0.2 : 0;
+    priest.head.rotation.y = P.hop && P.hopT > 0 ? altarObj[P.hop].position.x * -0.3 : 0;
+    camFor(k);
+  }
+
+  if (S.mode === 'play' && k === 'lavabo') {
+    idle(t);
+    hero.armL.rotation.set(-1.15, 0, 0.25); hero.armR.rotation.set(-1.3, 0, -0.25);
+    const lv = hero.props.lavabo.userData;
+    if (P.stage === 'pour') {
+      P.level += P.spd * dt;
+      if (P.level >= 1) {
+        P.level = 1; P.spill++; sfx.bump();
+        toast(pick(['Molhou a casula do padre!', 'Enchente no presbitério!', 'O padre tomou um banho!']), 'bad');
+        P.stage = 'done'; P.wait = 1.2;
+      }
+    } else if (P.stage === 'done') {
+      P.wait -= dt;
+      if (P.wait <= 0) { P.round++; if (P.round >= P.rounds) endPhase(); else newPour(); }
+    }
+    const pouring = P.stage === 'pour';
+    lv.jug.rotation.z += ((pouring ? 1.0 : 0) - lv.jug.rotation.z) * Math.min(1, dt * 10);
+    lv.stream.visible = pouring;
+    if (pouring) lv.stream.scale.x = lv.stream.scale.z = 0.8 + Math.sin(t * 30) * 0.2;
+    $('#needle').style.left = (P.level * 100) + '%';
+    priest.head.rotation.set(pouring ? 0.25 : 0, 0, 0);
+    camFor(k); hud();
   }
 
   if (S.mode === 'play' && k === 'proc') {
